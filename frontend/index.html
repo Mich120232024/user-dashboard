@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research & Analytics Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="professional-enhancements.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <h1>Research & Analytics Dashboard</h1>
+                <div class="header-status">
+                    <span class="status-indicator" id="status"></span>
+                    <span id="status-text">Loading...</span>
+                    <div class="performance-indicators" style="margin-left: 1rem;">
+                        <!-- Performance metrics will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav">
+            <button class="nav-item active" data-tab="overview">Overview</button>
+            <button class="nav-item" data-tab="mailbox">Mailbox</button>
+            <button class="nav-item" data-tab="cosmos">Cosmos Explorer</button>
+            <button class="nav-item" data-tab="graph">Graph DB</button>
+            <button class="nav-item" data-tab="agents">Agent Shell</button>
+            <button class="nav-item" data-tab="manager">Manager</button>
+            <button class="nav-item" data-tab="workspace">Workspace</button>
+            <button class="nav-item" data-tab="research">Research Viz</button>
+        </nav>
+
+        <main class="main">
+            <!-- Overview Tab -->
+            <section class="tab-content active" id="overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>System Health</h3>
+                        <div class="stat-value" id="system-health">Loading...</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Containers</h3>
+                        <div class="stat-value" id="total-containers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Agents</h3>
+                        <div class="stat-value" id="active-agents">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Documents</h3>
+                        <div class="stat-value" id="total-documents">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mailbox Tab -->
+            <section class="tab-content" id="mailbox">
+                <div class="tab-header">
+                    <h2>System Mailbox</h2>
+                    <div class="mailbox-controls">
+                        <button class="btn btn-primary" onclick="refreshMailbox()">Refresh</button>
+                        <button class="btn btn-secondary" onclick="composeMessage()">Compose</button>
+                        <select id="mailbox-filter" onchange="filterMessages()">
+                            <option value="all">All Messages</option>
+                            <option value="unread">Unread</option>
+                            <option value="sent">Sent</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mailbox-layout">
+                    <div class="mailbox-sidebar">
+                        <div class="mailbox-folders">
+                            <div class="folder-item active" data-folder="inbox" onclick="selectFolder('inbox')">
+                                <span class="folder-icon">📥</span>
+                                <span class="folder-name">Inbox</span>
+                                <span class="folder-count" id="inbox-count">0</span>
+                            </div>
+                            <div class="folder-item" data-folder="sent" onclick="selectFolder('sent')">
+                                <span class="folder-icon">📤</span>
+                                <span class="folder-name">Sent</span>
+                                <span class="folder-count" id="sent-count">0</span>
+                            </div>
+                            <div class="folder-item" data-folder="drafts" onclick="selectFolder('drafts')">
+                                <span class="folder-icon">📝</span>
+                                <span class="folder-name">Drafts</span>
+                                <span class="folder-count" id="drafts-count">0</span>
+                            </div>
+                            <div class="folder-item" data-folder="archived" onclick="selectFolder('archived')">
+                                <span class="folder-icon">📦</span>
+                                <span class="folder-name">Archived</span>
+                                <span class="folder-count" id="archived-count">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mailbox-filters">
+                            <h4>Filters</h4>
+                            <div class="filter-group">
+                                <label>Priority:</label>
+                                <select id="priority-filter" onchange="applyFilters()">
+                                    <option value="">All</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Type:</label>
+                                <select id="type-filter" onchange="applyFilters()">
+                                    <option value="">All</option>
+                                    <option value="REPORT">Report</option>
+                                    <option value="APPROVAL">Approval</option>
+                                    <option value="RESPONSE">Response</option>
+                                    <option value="REALITY_CHECK">Reality Check</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>From:</label>
+                                <input type="text" id="from-filter" placeholder="Agent name..." onchange="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mailbox-main">
+                        <div class="message-list" id="message-list">
+                            <div class="loading">Loading messages...</div>
+                        </div>
+                        
+                        <div class="message-pagination" id="message-pagination">
+                            <button class="btn" id="prev-messages" onclick="previousMessages()">Previous</button>
+                            <span class="page-info" id="messages-page-info">Page 1</span>
+                            <button class="btn" id="next-messages" onclick="nextMessages()">Next</button>
+                        </div>
+                    </div>
+                    
+                    <div class="message-preview" id="message-preview">
+                        <div class="preview-placeholder">
+                            <h3>Select a message</h3>
+                            <p>Choose a message from the list to view its content.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cosmos Explorer Tab -->
+            <section class="tab-content" id="cosmos">
+                <div class="tab-header">
+                    <h2>Cosmos DB Explorer</h2>
+                    <button class="btn btn-primary" onclick="refreshContainers()">Refresh</button>
+                </div>
+                
+                <div class="content-grid">
+                    <div class="sidebar">
+                        <div class="search-box">
+                            <input type="text" placeholder="Search containers..." id="container-search">
+                        </div>
+                        <div class="container-list" id="container-list">
+                            <div class="loading">Loading containers...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="main-content">
+                        <div class="content-header">
+                            <h3 id="selected-container">Select a container</h3>
+                            <div class="controls">
+                                <input type="text" placeholder="Search documents..." id="document-search">
+                                <button class="btn btn-secondary" onclick="searchDocuments()">Search</button>
+                            </div>
+                        </div>
+                        
+                        <div class="document-list" id="document-list">
+                            <div class="empty-state">
+                                <p>Select a container to view documents</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pagination" id="pagination" style="display: none;">
+                            <button class="btn" id="prev-btn" onclick="previousPage()">Previous</button>
+                            <span class="page-info" id="page-info">Page 1</span>
+                            <button class="btn" id="next-btn" onclick="nextPage()">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Graph DB Explorer Tab -->
+            <section class="tab-content" id="graph">
+                <div class="tab-header">
+                    <h2>Graph Database Explorer</h2>
+                    <div class="graph-controls">
+                        <button class="btn btn-primary" onclick="loadGraphData()">Load Graph</button>
+                        <button class="btn btn-secondary" onclick="resetGraph()">Reset View</button>
+                        <select id="graph-layout" onchange="changeLayout()">
+                            <option value="cose">COSE</option>
+                            <option value="circle">Circle</option>
+                            <option value="grid">Grid</option>
+                            <option value="dagre">Hierarchical</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="graph-layout">
+                    <div class="graph-sidebar">
+                        <div class="graph-info">
+                            <h4>Graph Statistics</h4>
+                            <div class="stat-item">
+                                <span>Nodes:</span>
+                                <span id="node-count">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Edges:</span>
+                                <span id="edge-count">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="graph-filters">
+                            <h4>Node Types</h4>
+                            <div class="node-type-filter">
+                                <label><input type="checkbox" checked data-type="agent"> Agents</label>
+                                <label><input type="checkbox" checked data-type="document"> Documents</label>
+                                <label><input type="checkbox" checked data-type="message"> Messages</label>
+                                <label><input type="checkbox" checked data-type="workspace"> Workspaces</label>
+                            </div>
+                        </div>
+                        
+                        <div class="selected-node-info" id="selected-node-info">
+                            <h4>Node Details</h4>
+                            <p>Click a node to see details</p>
+                        </div>
+                    </div>
+                    
+                    <div class="graph-container">
+                        <div id="cy-container" style="width: 100%; height: 600px; border: 1px solid #ddd;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Agent Shell Tab -->
+            <section class="tab-content" id="agents">
+                <div class="tab-header">
+                    <h2>Agent Shell Explorer</h2>
+                    <div class="agent-controls">
+                        <select id="agent-selector" onchange="selectAgent()">
+                            <option value="">Select Agent...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="refreshAgentData()">Refresh</button>
+                        <button class="btn btn-secondary" onclick="exportAgentData()">Export</button>
+                    </div>
+                </div>
+                
+                <div class="agent-shell-layout">
+                    <div class="agent-summary" id="agent-summary">
+                        <div class="agent-placeholder">
+                            <h3>Select an Agent</h3>
+                            <p>Choose an agent to explore their journal, context memory, and workspace.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="agent-tabs">
+                        <button class="agent-tab active" data-tab="journal" onclick="switchAgentTab('journal')">Journal</button>
+                        <button class="agent-tab" data-tab="context" onclick="switchAgentTab('context')">Context Memory</button>
+                        <button class="agent-tab" data-tab="messages" onclick="switchAgentTab('messages')">Messages</button>
+                        <button class="agent-tab" data-tab="workspace" onclick="switchAgentTab('workspace')">Workspace</button>
+                    </div>
+                    
+                    <div class="agent-content">
+                        <div class="agent-tab-content active" id="agent-journal">
+                            <div class="journal-entries" id="journal-entries">
+                                <div class="loading">Select an agent to load journal entries...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-tab-content" id="agent-context">
+                            <div class="context-memory" id="context-memory">
+                                <div class="loading">Select an agent to load context memory...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-tab-content" id="agent-messages">
+                            <div class="agent-messages" id="agent-messages">
+                                <div class="loading">Select an agent to load messages...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-tab-content" id="agent-workspace">
+                            <div class="workspace-explorer" id="workspace-explorer">
+                                <div class="loading">Select an agent to explore workspace...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Manager Dashboard Tab -->
+            <section class="tab-content" id="manager">
+                <div class="tab-header">
+                    <h2>Manager Dashboard</h2>
+                    <div class="manager-controls">
+                        <button class="btn btn-primary" onclick="refreshManagerData()">Refresh</button>
+                        <button class="btn btn-secondary" onclick="exportReport()">Export Report</button>
+                        <select id="time-range" onchange="changeTimeRange()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="manager-layout">
+                    <div class="manager-stats">
+                        <div class="stat-card">
+                            <h4>Active Agents</h4>
+                            <div class="stat-value" id="active-agents-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Pending Tasks</h4>
+                            <div class="stat-value" id="pending-tasks-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Completed Today</h4>
+                            <div class="stat-value" id="completed-today-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>System Health</h4>
+                            <div class="stat-value" id="system-health-status">Good</div>
+                        </div>
+                    </div>
+                    
+                    <div class="manager-tabs">
+                        <button class="manager-tab active" data-tab="overview" onclick="switchManagerTab('overview')">Overview</button>
+                        <button class="manager-tab" data-tab="agents" onclick="switchManagerTab('agents')">Agents</button>
+                        <button class="manager-tab" data-tab="agenda" onclick="switchManagerTab('agenda')">Agenda</button>
+                        <button class="manager-tab" data-tab="reports" onclick="switchManagerTab('reports')">Reports</button>
+                    </div>
+                    
+                    <div class="manager-content">
+                        <div class="manager-tab-content active" id="manager-overview">
+                            <div class="overview-charts">
+                                <div class="chart-container">
+                                    <h4>Agent Activity</h4>
+                                    <div id="activity-chart" style="height: 300px;"></div>
+                                </div>
+                                <div class="chart-container">
+                                    <h4>Task Completion</h4>
+                                    <div id="completion-chart" style="height: 300px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="manager-tab-content" id="manager-agents">
+                            <div class="agent-management">
+                                <div class="agent-list" id="manager-agent-list">
+                                    <div class="loading">Loading agent management...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="manager-tab-content" id="manager-agenda">
+                            <div class="agenda-view">
+                                <div class="agenda-calendar" id="agenda-calendar">
+                                    <div class="loading">Loading agenda...</div>
+                                </div>
+                                <div class="agenda-tasks" id="agenda-tasks">
+                                    <h4>Today's Tasks</h4>
+                                    <div class="task-list" id="today-tasks">
+                                        <div class="loading">Loading tasks...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="manager-tab-content" id="manager-reports">
+                            <div class="reports-view">
+                                <div class="report-filters">
+                                    <select id="report-type">
+                                        <option value="performance">Performance Report</option>
+                                        <option value="compliance">Compliance Report</option>
+                                        <option value="activity">Activity Report</option>
+                                        <option value="custom">Custom Report</option>
+                                    </select>
+                                    <button class="btn btn-primary" onclick="generateReport()">Generate</button>
+                                </div>
+                                <div class="report-content" id="report-content">
+                                    <div class="loading">Select a report type and click Generate...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workspace Explorer Tab -->
+            <section class="tab-content" id="workspace">
+                <div class="tab-header">
+                    <h2>Workspace Explorer</h2>
+                    <div class="workspace-controls">
+                        <button class="btn btn-primary" onclick="refreshWorkspace()">Refresh</button>
+                        <button class="btn btn-secondary" onclick="exportWorkspaceMap()">Export Map</button>
+                        <input type="text" id="workspace-search" placeholder="Search projects..." onkeyup="searchWorkspace()">
+                    </div>
+                </div>
+                
+                <div class="workspace-layout">
+                    <div class="workspace-tree" id="workspace-tree">
+                        <div class="tree-item" data-path="/" onclick="expandPath('/')">
+                            <span class="tree-icon">📁</span>
+                            <span class="tree-name">Research & Analytics Services</span>
+                            <span class="tree-toggle">▶</span>
+                        </div>
+                    </div>
+                    
+                    <div class="workspace-content">
+                        <div class="workspace-breadcrumb" id="workspace-breadcrumb">
+                            <span>/</span>
+                        </div>
+                        
+                        <div class="project-list" id="project-list">
+                            <div class="project-placeholder">
+                                <h3>Select a Workspace</h3>
+                                <p>Navigate the workspace tree to explore projects and structure.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="project-details" id="project-details">
+                            <div class="details-placeholder">
+                                <h4>Project Details</h4>
+                                <p>Select a project to view its details and structure.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Research Visualization Tab -->
+            <section class="tab-content" id="research">
+                <div class="tab-header">
+                    <h2>Research Content Visualization</h2>
+                    <div class="research-controls">
+                        <button class="btn btn-primary" onclick="loadResearchData()">Load Data</button>
+                        <button class="btn btn-secondary" onclick="resetResearchView()">Reset</button>
+                        <select id="research-view" onchange="changeResearchView()">
+                            <option value="network">Network View</option>
+                            <option value="timeline">Timeline View</option>
+                            <option value="categories">Category View</option>
+                            <option value="geographic">Geographic View</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="research-layout">
+                    <div class="research-sidebar">
+                        <div class="research-stats">
+                            <h4>Content Statistics</h4>
+                            <div class="stat-item">
+                                <span>Documents:</span>
+                                <span id="research-docs-count">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Categories:</span>
+                                <span id="research-categories-count">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Connections:</span>
+                                <span id="research-connections-count">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="research-filters">
+                            <h4>Filters</h4>
+                            <div class="filter-section">
+                                <label>Content Type:</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" checked data-content="reports"> Reports</label>
+                                    <label><input type="checkbox" checked data-content="analysis"> Analysis</label>
+                                    <label><input type="checkbox" checked data-content="data"> Data</label>
+                                    <label><input type="checkbox" checked data-content="documentation"> Documentation</label>
+                                </div>
+                            </div>
+                            
+                            <div class="filter-section">
+                                <label>Time Range:</label>
+                                <select id="research-time-filter">
+                                    <option value="all">All Time</option>
+                                    <option value="year">Past Year</option>
+                                    <option value="quarter">Past Quarter</option>
+                                    <option value="month">Past Month</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="selected-research-info" id="selected-research-info">
+                            <h4>Selected Item</h4>
+                            <p>Click an item to see details</p>
+                        </div>
+                    </div>
+                    
+                    <div class="research-visualization">
+                        <div id="research-viz-container" style="width: 100%; height: 700px; border: 1px solid #ddd;">
+                            <div class="viz-placeholder">
+                                <h3>Research Content Map</h3>
+                                <p>Click "Load Data" to visualize research content and relationships.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        
+        <!-- Compose Message Modal -->
+        <div id="compose-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Compose Message</h3>
+                    <button class="modal-close" onclick="closeComposeModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="compose-form">
+                        <div class="form-group">
+                            <label for="compose-to">To:</label>
+                            <select id="compose-to" required>
+                                <option value="">Select recipient...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="compose-subject">Subject:</label>
+                            <input type="text" id="compose-subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="compose-priority">Priority:</label>
+                            <select id="compose-priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="compose-type">Type:</label>
+                            <select id="compose-type">
+                                <option value="MESSAGE">Message</option>
+                                <option value="REPORT">Report</option>
+                                <option value="REQUEST">Request</option>
+                                <option value="RESPONSE">Response</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="compose-content">Content:</label>
+                            <textarea id="compose-content" rows="10" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeComposeModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Send Message</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+
+    <!-- Cytoscape.js for graph visualization -->
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    
+    <script src="dashboard.js"></script>
+    <script src="dashboard-fixes.js"></script>
+</body>
+</html>

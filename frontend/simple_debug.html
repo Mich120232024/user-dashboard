@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced Mailbox Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #333; background: #2a2a2a; }
+        .success { border-color: #4CAF50; }
+        .error { border-color: #f44336; }
+        .warning { border-color: #ff9800; }
+        pre { background: #333; padding: 10px; overflow: auto; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; background: #007ACC; color: white; border: none; cursor: pointer; }
+        button:hover { background: #005a9e; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Enhanced Mailbox Debug Tool</h1>
+    
+    <div class="test">
+        <h3>Step 1: API Endpoint Test</h3>
+        <button onclick="testAPI()">Test API Endpoint</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Step 2: Network & Console Monitoring</h3>
+        <button onclick="enableMonitoring()">Enable Monitoring</button>
+        <div id="monitoring-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Step 3: Dashboard Simulation</h3>
+        <button onclick="simulateDashboard()">Simulate Dashboard Mailbox Loading</button>
+        <div id="dashboard-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Step 4: Function Call Tracing</h3>
+        <button onclick="traceFunctions()">Trace Function Calls</button>
+        <div id="trace-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Step 5: Manual Debugging</h3>
+        <button onclick="manualDebug()">Run Manual Debug Sequence</button>
+        <div id="manual-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001/api/v1';
+        let allMessages = [];
+        let currentFilter = 'all';
+        let messagesPagination = {
+            offset: 0,
+            limit: 50,
+            hasMore: true,
+            loading: false
+        };
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success';
+            element.innerHTML += `<div class="${className}"><pre>${message}</pre></div>`;
+        }
+
+        async function testAPI() {
+            const resultEl = document.getElementById('api-result');
+            resultEl.innerHTML = '';
+            
+            try {
+                log('api-result', '🔄 Testing API endpoint...', 'info');
+                
+                const response = await fetch(`${API_BASE}/messages/HEAD_OF_ENGINEERING?limit=5`);
+                log('api-result', `Response Status: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('api-result', `✅ API Response:
+Agent: ${data.agent}
+Total: ${data.total}
+Messages: ${data.messages ? data.messages.length : 'undefined'}`, 'success');
+                    
+                    if (data.messages && data.messages.length > 0) {
+                        log('api-result', `📧 First Message Sample:
+ID: ${data.messages[0].id}
+From: ${data.messages[0].from}
+To: ${data.messages[0].to}
+Subject: ${data.messages[0].subject || 'No Subject'}
+Status: ${data.messages[0].status}`, 'success');
+                    }
+                } else {
+                    const error = await response.text();
+                    log('api-result', `❌ API Error: ${error}`, 'error');
+                }
+            } catch (error) {
+                log('api-result', `💥 Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        function enableMonitoring() {
+            const resultEl = document.getElementById('monitoring-result');
+            resultEl.innerHTML = '';
+            
+            log('monitoring-result', '🎯 Enabling console and network monitoring...', 'info');
+            
+            // Monitor console errors
+            const originalError = console.error;
+            console.error = function(...args) {
+                log('monitoring-result', `🚨 Console Error: ${args.join(' ')}`, 'error');
+                originalError.apply(console, args);
+            };
+            
+            // Monitor fetch requests
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const url = args[0];
+                if (typeof url === 'string' && url.includes('/api/')) {
+                    log('monitoring-result', `🌐 API Request: ${url}`, 'info');
+                }
+                return originalFetch.apply(this, args).then(response => {
+                    if (typeof url === 'string' && url.includes('/api/')) {
+                        log('monitoring-result', `📡 API Response: ${response.status} for ${url}`, 
+                            response.ok ? 'success' : 'error');
+                    }
+                    return response;
+                }).catch(error => {
+                    if (typeof url === 'string' && url.includes('/api/')) {
+                        log('monitoring-result', `💥 API Error: ${error.message} for ${url}`, 'error');
+                    }
+                    throw error;
+                });
+            };
+            
+            log('monitoring-result', '✅ Monitoring enabled. Now test the main dashboard.', 'success');
+        }
+
+        async function simulateDashboard() {
+            const resultEl = document.getElementById('dashboard-result');
+            resultEl.innerHTML = '';
+            
+            log('dashboard-result', '🎭 Simulating dashboard mailbox loading process...', 'info');
+            
+            try {
+                // Simulate the exact refreshMessages function from the dashboard
+                log('dashboard-result', '📥 Step 1: Reset pagination state', 'info');
+                messagesPagination.offset = 0;
+                messagesPagination.hasMore = true;
+                allMessages = [];
+                
+                log('dashboard-result', '📡 Step 2: Fetch messages from API', 'info');
+                const data = await fetchDataCached(`${API_BASE}/messages/HEAD_OF_ENGINEERING?limit=${messagesPagination.limit}`, true);
+                
+                if (data && data.messages && Array.isArray(data.messages)) {
+                    log('dashboard-result', `✅ Step 3: Messages received
+Count: ${data.messages.length}
+Type: ${typeof data.messages}
+Array: ${Array.isArray(data.messages)}`, 'success');
+                    
+                    allMessages = data.messages;
+                    messagesPagination.hasMore = data.messages.length === messagesPagination.limit;
+                    messagesPagination.offset += data.messages.length;
+                    
+                    log('dashboard-result', '📊 Step 4: Update message counts', 'info');
+                    updateMessageCounts();
+                    
+                    log('dashboard-result', '🎨 Step 5: Display filtered messages', 'info');
+                    displayFilteredMessages();
+                    
+                    log('dashboard-result', `✅ Simulation Complete!
+All Messages: ${allMessages.length}
+Filtered Messages: ${getFilteredMessages().length}
+Current Filter: ${currentFilter}`, 'success');
+                    
+                } else {
+                    log('dashboard-result', `❌ Invalid API response structure:
+Data: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+                
+            } catch (error) {
+                log('dashboard-result', `💥 Simulation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function traceFunctions() {
+            const resultEl = document.getElementById('trace-result');
+            resultEl.innerHTML = '';
+            
+            log('trace-result', '🔍 Tracing function calls and state...', 'info');
+            
+            // Check if functions exist
+            const functions = [
+                'refreshMessages', 'updateMessageCounts', 'displayFilteredMessages', 
+                'fetchDataCached', 'filterMessagesByFolder'
+            ];
+            
+            functions.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    log('trace-result', `✅ Function exists: ${funcName}`, 'success');
+                } else {
+                    log('trace-result', `❌ Function missing: ${funcName}`, 'error');
+                }
+            });
+            
+            // Check global variables
+            log('trace-result', `📊 Global State:
+allMessages: ${typeof allMessages} (length: ${allMessages ? allMessages.length : 'N/A'})
+currentFilter: ${typeof currentFilter} (value: ${currentFilter})
+messagesPagination: ${typeof messagesPagination}
+API_BASE: ${typeof API_BASE} (value: ${API_BASE})`, 'info');
+            
+            // Check DOM elements
+            const elements = ['message-list', 'count-all', 'count-unread'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    log('trace-result', `✅ DOM element exists: #${id}`, 'success');
+                } else {
+                    log('trace-result', `❌ DOM element missing: #${id}`, 'error');
+                }
+            });
+        }
+
+        async function manualDebug() {
+            const resultEl = document.getElementById('manual-result');
+            resultEl.innerHTML = '';
+            
+            log('manual-result', '🛠️ Running manual debug sequence...', 'info');
+            
+            try {
+                // Step 1: Direct API test
+                log('manual-result', '1️⃣ Direct API test...', 'info');
+                const response = await fetch(`${API_BASE}/messages/HEAD_OF_ENGINEERING?limit=5`);
+                const apiData = await response.json();
+                log('manual-result', `API returned ${apiData.messages.length} messages`, 'success');
+                
+                // Step 2: Assign to global variable
+                log('manual-result', '2️⃣ Assigning to global allMessages...', 'info');
+                allMessages = apiData.messages;
+                log('manual-result', `allMessages now has ${allMessages.length} items`, 'success');
+                
+                // Step 3: Test filtering
+                log('manual-result', '3️⃣ Testing message filtering...', 'info');
+                const unreadMessages = allMessages.filter(m => m.status === 'unread');
+                const readMessages = allMessages.filter(m => m.status === 'read' || m.status === 'read_and_answered');
+                const sentMessages = allMessages.filter(m => m.status === 'sent');
+                
+                log('manual-result', `Filter results:
+Total: ${allMessages.length}
+Unread: ${unreadMessages.length}
+Read: ${readMessages.length}
+Sent: ${sentMessages.length}`, 'success');
+                
+                // Step 4: Test HTML generation
+                log('manual-result', '4️⃣ Testing HTML generation...', 'info');
+                const sampleHTML = generateMessageHTML(allMessages[0]);
+                log('manual-result', `Sample HTML generated: ${sampleHTML.length} characters`, 'success');
+                
+                // Step 5: Test count updates
+                log('manual-result', '5️⃣ Testing count updates...', 'info');
+                const counts = {
+                    all: allMessages.length,
+                    unread: unreadMessages.length,
+                    sent: sentMessages.length,
+                    archived: allMessages.filter(m => m.status === 'archived').length
+                };
+                log('manual-result', `Counts calculated: ${JSON.stringify(counts)}`, 'success');
+                
+                log('manual-result', '✅ Manual debug complete. Check individual steps for issues.', 'success');
+                
+            } catch (error) {
+                log('manual-result', `💥 Manual debug failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Helper functions from the dashboard
+        async function fetchDataCached(url, skipCache = false) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`Failed to fetch ${url}:`, error);
+                return null;
+            }
+        }
+
+        function updateMessageCounts() {
+            const counts = {
+                all: allMessages.length,
+                unread: allMessages.filter(m => m.status === 'unread').length,
+                sent: allMessages.filter(m => m.status === 'sent').length,
+                archived: allMessages.filter(m => m.status === 'archived').length
+            };
+            
+            console.log('Updating counts:', counts);
+            return counts;
+        }
+
+        function getFilteredMessages() {
+            let filtered = allMessages;
+            
+            switch(currentFilter) {
+                case 'unread':
+                    filtered = allMessages.filter(m => m.status === 'unread');
+                    break;
+                case 'sent':
+                    filtered = allMessages.filter(m => m.status === 'sent');
+                    break;
+                case 'archived':
+                    filtered = allMessages.filter(m => m.status === 'archived');
+                    break;
+            }
+            
+            return filtered;
+        }
+
+        function displayFilteredMessages() {
+            const filtered = getFilteredMessages();
+            console.log(`Displaying ${filtered.length} filtered messages`);
+            return filtered;
+        }
+
+        function generateMessageHTML(msg) {
+            return `
+                <div class="list-item ${msg.status === 'unread' ? 'unread' : ''}" onclick="viewMessage('${msg.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div style="font-weight: ${msg.status === 'unread' ? '600' : '500'}">${msg.subject || 'No Subject'}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                From: ${msg.from || 'Unknown'} | ${new Date(msg.timestamp).toLocaleDateString()}
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                ${(msg.content || '').substring(0, 100)}${msg.content?.length > 100 ? '...' : ''}
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            ${new Date(msg.timestamp).toLocaleTimeString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        log('monitoring-result', '🚀 Debug tool loaded. Use the buttons above to test each step.', 'success');
+    </script>
+</body>
+</html>

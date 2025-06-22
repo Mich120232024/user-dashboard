@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Debug</h1>
+    
+    <button onclick="testAPI()">Test API Connection</button>
+    <button onclick="testBackend()">Test Backend</button>
+    <button onclick="testConsole()">Test Console</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        console.log('Debug page loaded');
+        
+        function testConsole() {
+            console.log('Console working');
+            addResult('Console test: PASSED');
+        }
+        
+        async function testBackend() {
+            try {
+                const response = await fetch('http://localhost:8001/api/v1/');
+                addResult('Backend reachable: ' + response.status);
+            } catch (error) {
+                addResult('Backend error: ' + error.message);
+            }
+        }
+        
+        async function testAPI() {
+            try {
+                const response = await fetch('http://localhost:8001/api/v1/cosmos/containers');
+                const data = await response.json();
+                addResult('API Success: ' + data.containers.length + ' containers');
+                addResult('First container: ' + data.containers[0].id);
+            } catch (error) {
+                addResult('API Error: ' + error.message);
+            }
+        }
+        
+        function addResult(text) {
+            const div = document.createElement('div');
+            div.className = 'result';
+            div.textContent = new Date().toLocaleTimeString() + ': ' + text;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        // Auto-test on load
+        setTimeout(() => {
+            testConsole();
+            testBackend();
+            testAPI();
+        }, 1000);
+    </script>
+</body>
+</html>
