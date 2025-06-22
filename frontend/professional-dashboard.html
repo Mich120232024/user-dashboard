@@ -1144,12 +1144,12 @@
                                 onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'; this.style.transform='translateY(0)'">
                             Mark as ${message.status === 'read' ? 'Unread' : 'Read'}
                         </button>
-                        <button onclick="archiveMessageWithFeedback('${messageId}')" 
+                        <button onclick="${message.status === 'archived' ? `unarchiveMessageWithFeedback('${messageId}')` : `archiveMessageWithFeedback('${messageId}')`}" 
                                 style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
                                        border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
-                                onmouseover="this.style.background='var(--warning-amber)'; this.style.color='white'; this.style.transform='translateY(-1px)'"
+                                onmouseover="this.style.background='${message.status === 'archived' ? 'var(--accent-blue)' : 'var(--warning-amber)'}'; this.style.color='white'; this.style.transform='translateY(-1px)'"
                                 onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'; this.style.transform='translateY(0)'">
-                            Archive
+                            ${message.status === 'archived' ? 'Unarchive' : 'Archive'}
                         </button>
                     </div>
                 </div>
@@ -1287,6 +1287,54 @@
                     archiveBtn.style.background = 'transparent';
                     archiveBtn.style.color = 'var(--text-secondary)';
                     archiveBtn.style.cursor = 'pointer';
+                }, 2000);
+            }
+        }
+        
+        async function unarchiveMessageWithFeedback(messageId) {
+            // Find the unarchive button and show loading state
+            const unarchiveBtn = event.target;
+            const originalText = unarchiveBtn.textContent;
+            unarchiveBtn.textContent = 'Unarchiving...';
+            unarchiveBtn.disabled = true;
+            unarchiveBtn.style.background = '#6b7280';
+            unarchiveBtn.style.cursor = 'not-allowed';
+            
+            const success = await updateMessageStatus(messageId, 'read');
+            if (success) {
+                // Show success feedback
+                unarchiveBtn.textContent = '✓ Unarchived';
+                unarchiveBtn.style.background = 'var(--success-green)';
+                unarchiveBtn.style.color = 'white';
+                
+                // Show notification
+                showNotification('Message restored to inbox');
+                
+                // Smooth transition: fade out modal then refresh
+                const modal = window.currentModal;
+                if (modal) {
+                    modal.style.transition = 'opacity 0.3s ease';
+                    modal.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        closeMessageViewer();
+                        removeMessageFromList(messageId);
+                        updateMessageCounts();
+                    }, 300);
+                }
+            } else {
+                // Show error state
+                unarchiveBtn.textContent = '✗ Failed';
+                unarchiveBtn.style.background = 'var(--danger-red)';
+                unarchiveBtn.style.color = 'white';
+                
+                // Reset after delay
+                setTimeout(() => {
+                    unarchiveBtn.textContent = originalText;
+                    unarchiveBtn.disabled = false;
+                    unarchiveBtn.style.background = 'transparent';
+                    unarchiveBtn.style.color = 'var(--text-secondary)';
+                    unarchiveBtn.style.cursor = 'pointer';
                 }, 2000);
             }
         }
@@ -1616,6 +1664,7 @@
         window.toggleMessageStatus = toggleMessageStatus;
         window.archiveMessage = archiveMessage;
         window.archiveMessageWithFeedback = archiveMessageWithFeedback;
+        window.unarchiveMessageWithFeedback = unarchiveMessageWithFeedback;
         window.replyToMessage = replyToMessage;
     </script>
 </body>
