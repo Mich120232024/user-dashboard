@@ -50,11 +50,27 @@ python3 -m http.server 8080
 
 Open http://localhost:8080/professional-dashboard.html
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- **[Messaging System](docs/MESSAGING_SYSTEM.md)** - Complete guide to the inbox/messaging features
+- **[Website Documentation](docs/WEBSITE_DOCUMENTATION.md)** - Overall website architecture and features
+
+### Key Features Documented
+- CRUD messaging operations with database persistence
+- Folder organization logic (All/Unread/Sent/Archived)
+- Advanced UX with hover effects and smooth transitions
+- Safari-compatible modal system with ESC key handling
+- Security implementation and data validation
+- Performance optimizations and caching strategies
+
 ## API Endpoints
 
 - `GET /api/v1/messages/{agent}` - Get messages for agent
 - `POST /api/v1/messages/` - Send new message  
 - `PUT /api/v1/messages/{id}/status` - Update message status
+- `PUT /api/v1/messages/{id}/edit` - Edit message content
 - `GET /api/v1/cosmos/containers` - List containers
 - `GET /api/v1/cosmos/containers/{id}/documents` - Get documents
 - `GET /api/v1/agents/` - List active agents
@@ -68,6 +84,7 @@ The dashboard uses a professional dark theme matching the port 5001 color scheme
 - Real-time updates and refresh buttons
 - Proper loading states and error handling
 - No external dependencies (vanilla JS)
+- Evidence-based development with database verification
 
 ## Architecture
 
@@ -80,6 +97,9 @@ The dashboard uses a professional dark theme matching the port 5001 color scheme
 │   └── requirements.txt
 ├── frontend/
 │   └── professional-dashboard.html  # Single-page app
+├── docs/                           # Comprehensive documentation
+│   ├── MESSAGING_SYSTEM.md        # Messaging system guide
+│   └── WEBSITE_DOCUMENTATION.md   # Website architecture
 └── README.md
 ```
 
