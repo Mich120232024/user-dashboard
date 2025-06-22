@@ -33,6 +33,11 @@ class SendMessageRequest(BaseModel):
     thread_id: Optional[str] = None
 
 
+class EditMessageRequest(BaseModel):
+    content: str
+    subject: Optional[str] = None
+
+
 @router.get("/")
 async def list_messages(
     agent: Optional[str] = Query(None, description="Filter messages for specific agent"),
@@ -232,3 +237,57 @@ async def update_message_status(message_id: str, status: str):
     except Exception as e:
         logger.error(f"Error updating message status: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update message: {str(e)}")
+
+
+@router.put("/{message_id}/edit")
+async def edit_message(message_id: str, edit_request: EditMessageRequest):
+    """Edit message content and subject."""
+    try:
+        # Get system_inbox container
+        cosmos_manager = CosmosDBManager()
+        system_inbox = cosmos_manager.database.get_container_client("system_inbox")
+        
+        # Get the message first to get partition key
+        try:
+            item = system_inbox.read_item(item=message_id, partition_key=message_id)
+        except:
+            # If that fails, query to find it
+            query = f'SELECT * FROM c WHERE c.id = "{message_id}"'
+            items = list(system_inbox.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            if not items:
+                raise HTTPException(status_code=404, detail="Message not found")
+            item = items[0]
+        
+        # Check if user can edit this message (only allow editing own messages from USER_DASHBOARD)
+        if item.get("from") != "USER_DASHBOARD":
+            raise HTTPException(status_code=403, detail="Can only edit your own messages")
+        
+        # Update content and subject
+        item["content"] = edit_request.content
+        if edit_request.subject is not None:
+            item["subject"] = edit_request.subject
+        
+        # Add edit timestamp
+        from datetime import datetime
+        item["last_edited"] = datetime.now().isoformat()
+        item["edited"] = True
+        
+        # Update in database
+        system_inbox.replace_item(item=item, body=item)
+        
+        return {
+            "success": True,
+            "message_id": message_id,
+            "updated_content": edit_request.content,
+            "updated_subject": edit_request.subject,
+            "last_edited": item["last_edited"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error editing message: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to edit message: {str(e)}")

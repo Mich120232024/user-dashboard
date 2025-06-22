@@ -1137,6 +1137,15 @@
                                 onmouseout="this.style.background='var(--accent-blue)'; this.style.transform='translateY(0)'">
                             Reply
                         </button>
+                        ${message.from === 'USER_DASHBOARD' ? `
+                        <button onclick="editMessage('${messageId}')" 
+                                style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
+                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
+                                onmouseover="this.style.background='var(--accent-cyan)'; this.style.color='white'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'; this.style.transform='translateY(0)'">
+                            Edit
+                        </button>
+                        ` : ''}
                         <button onclick="toggleMessageStatus('${messageId}', '${message.status}')" 
                                 style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
                                        border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
@@ -1406,6 +1415,203 @@
                     document.getElementById('compose-subject').value = 'Re: ' + (message.subject || 'No Subject');
                 });
             }, 100);
+        }
+        
+        function editMessage(messageId) {
+            const message = allMessages.find(m => m.id === messageId);
+            if (!message) {
+                showNotification('Message not found', 'error');
+                return;
+            }
+            
+            if (message.from !== 'USER_DASHBOARD') {
+                showNotification('You can only edit your own messages', 'error');
+                return;
+            }
+            
+            closeMessageViewer();
+            
+            // Create edit modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 1000; display: flex; 
+                align-items: center; justify-content: center; cursor: pointer;
+            `;
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="background: var(--bg-card); border-radius: 8px; width: 600px; max-height: 80vh; 
+                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); cursor: default;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                        <h3 style="margin: 0; color: var(--text-primary);">Edit Message</h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px;">Subject:</label>
+                            <input type="text" id="edit-subject" value="${message.subject || ''}" placeholder="Message subject..." 
+                                   style="width: 100%; padding: 8px; background: var(--bg-dark); color: var(--text-primary); 
+                                          border: 1px solid var(--border-color); border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px;">Message:</label>
+                            <textarea id="edit-content" rows="8" 
+                                      style="width: 100%; padding: 12px; background: var(--bg-dark); color: var(--text-primary); 
+                                             border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; 
+                                             font-family: var(--font-main);">${message.content}</textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button onclick="closeEditModal()" 
+                                    style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
+                                           border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
+                                    onmouseover="this.style.background='var(--bg-hover)'; this.style.color='var(--text-primary)'; this.style.transform='translateY(-1px)'"
+                                    onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'; this.style.transform='translateY(0)'">
+                                Cancel
+                            </button>
+                            <button onclick="saveEditedMessage('${messageId}')" 
+                                    style="padding: 8px 16px; background: var(--accent-cyan); color: white; 
+                                           border: none; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
+                                    onmouseover="this.style.background='#0891b2'; this.style.transform='translateY(-1px)'"
+                                    onmouseout="this.style.background='var(--accent-cyan)'; this.style.transform='translateY(0)'">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            window.currentModal = modal;
+            
+            // Enhanced Safari modal setup
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            
+            // Focus the content field
+            setTimeout(() => {
+                const contentField = document.getElementById('edit-content');
+                if (contentField) {
+                    contentField.focus();
+                    contentField.setSelectionRange(contentField.value.length, contentField.value.length);
+                }
+            }, 10);
+            
+            // Click outside to close
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal || e.target === e.currentTarget) {
+                    closeEditModal();
+                }
+            }, false);
+            
+            // Prevent clicks on modal content from bubbling
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                }, false);
+            }
+        }
+        
+        function closeEditModal() {
+            if (window.currentModal) {
+                document.body.removeChild(window.currentModal);
+                window.currentModal = null;
+            }
+        }
+        
+        async function saveEditedMessage(messageId) {
+            const newContent = document.getElementById('edit-content').value;
+            const newSubject = document.getElementById('edit-subject').value;
+            
+            if (!newContent.trim()) {
+                showNotification('Message content cannot be empty', 'error');
+                return;
+            }
+            
+            // Find the save button and show loading state
+            const saveBtn = event.target;
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+            saveBtn.style.background = '#6b7280';
+            saveBtn.style.cursor = 'not-allowed';
+            
+            try {
+                const response = await fetch(`${API_BASE}/messages/${messageId}/edit`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: newContent.trim(),
+                        subject: newSubject || null
+                    })
+                });
+                
+                if (response.ok) {
+                    // Show success feedback
+                    saveBtn.textContent = '✓ Saved';
+                    saveBtn.style.background = 'var(--success-green)';
+                    saveBtn.style.color = 'white';
+                    
+                    // Update local message
+                    const message = allMessages.find(m => m.id === messageId);
+                    if (message) {
+                        message.content = newContent.trim();
+                        message.subject = newSubject || null;
+                        message.edited = true;
+                    }
+                    
+                    // Show notification
+                    showNotification('Message updated successfully');
+                    
+                    // Smooth transition: fade out modal then refresh
+                    const modal = window.currentModal;
+                    if (modal) {
+                        modal.style.transition = 'opacity 0.3s ease';
+                        modal.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            closeEditModal();
+                            displayFilteredMessages(); // Refresh display
+                        }, 300);
+                    }
+                } else {
+                    // Show error state
+                    saveBtn.textContent = '✗ Failed';
+                    saveBtn.style.background = 'var(--danger-red)';
+                    saveBtn.style.color = 'white';
+                    
+                    const error = await response.json();
+                    showNotification(`Failed to save: ${error.detail || 'Unknown error'}`, 'error');
+                    
+                    // Reset after delay
+                    setTimeout(() => {
+                        saveBtn.textContent = originalText;
+                        saveBtn.disabled = false;
+                        saveBtn.style.background = 'var(--accent-cyan)';
+                        saveBtn.style.color = 'white';
+                        saveBtn.style.cursor = 'pointer';
+                    }, 2000);
+                }
+            } catch (error) {
+                // Show error state
+                saveBtn.textContent = '✗ Failed';
+                saveBtn.style.background = 'var(--danger-red)';
+                saveBtn.style.color = 'white';
+                
+                showNotification(`Error: ${error.message}`, 'error');
+                
+                // Reset after delay
+                setTimeout(() => {
+                    saveBtn.textContent = originalText;
+                    saveBtn.disabled = false;
+                    saveBtn.style.background = 'var(--accent-cyan)';
+                    saveBtn.style.color = 'white';
+                    saveBtn.style.cursor = 'pointer';
+                }, 2000);
+            }
         }
         
         async function composeNewMessage() {
@@ -1772,6 +1978,9 @@
         window.archiveMessageWithFeedback = archiveMessageWithFeedback;
         window.unarchiveMessageWithFeedback = unarchiveMessageWithFeedback;
         window.replyToMessage = replyToMessage;
+        window.editMessage = editMessage;
+        window.closeEditModal = closeEditModal;
+        window.saveEditedMessage = saveEditedMessage;
     </script>
 </body>
 </html>
