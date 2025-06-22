@@ -1018,9 +1018,9 @@
         }
         
         function updateMessageCounts() {
-            document.getElementById('count-all').textContent = allMessages.length;
+            document.getElementById('count-all').textContent = allMessages.filter(m => m.status !== 'archived').length;
             document.getElementById('count-unread').textContent = allMessages.filter(m => m.status === 'unread').length;
-            document.getElementById('count-sent').textContent = allMessages.filter(m => m.status === 'sent').length;
+            document.getElementById('count-sent').textContent = allMessages.filter(m => m.from === 'USER_DASHBOARD' && m.status !== 'archived').length;
             document.getElementById('count-archived').textContent = allMessages.filter(m => m.status === 'archived').length;
         }
         
@@ -1045,7 +1045,8 @@
                     filtered = allMessages.filter(m => m.status === 'unread');
                     break;
                 case 'sent':
-                    filtered = allMessages.filter(m => m.status === 'sent');
+                    // Show only messages sent BY the user (from USER_DASHBOARD) that are not archived
+                    filtered = allMessages.filter(m => m.from === 'USER_DASHBOARD' && m.status !== 'archived');
                     break;
                 case 'archived':
                     filtered = allMessages.filter(m => m.status === 'archived');
