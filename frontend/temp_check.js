@@ -1,515 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
-    <style>
-        /* Port 5001 Style Color Scheme */
-        :root {
-            --primary-dark: #0a0e27;
-            --primary-blue: #1e3a8a;
-            --accent-blue: #3b82f6;
-            --accent-cyan: #06b6d4;
-            --success-green: #10b981;
-            --warning-amber: #f59e0b;
-            --danger-red: #ef4444;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border-color: #334155;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
-            --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            --gradient-dark: linear-gradient(180deg, #0a0e27 0%, #1e293b 100%);
-            --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-main);
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            line-height: 1.6;
-            font-size: 14px;
-        }
-
-        /* Header */
-        .header {
-            background: var(--gradient-dark);
-            border-bottom: 1px solid var(--border-color);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-md);
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
-
-        .header-status {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success-green);
-            display: inline-block;
-        }
-
-        /* Navigation */
-        .nav {
-            background: var(--bg-card);
-            padding: 0 24px;
-            display: flex;
-            gap: 8px;
-            border-bottom: 1px solid var(--border-color);
-            overflow-x: auto;
-        }
-
-        .nav-item {
-            padding: 12px 16px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-radius: 8px 8px 0 0;
-            transition: all 0.2s;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .nav-item:hover {
-            color: var(--text-primary);
-            background: var(--bg-hover);
-        }
-
-        .nav-item.active {
-            color: var(--text-primary);
-            background: var(--accent-blue);
-            box-shadow: var(--shadow-sm);
-        }
-
-        /* Main Layout */
-        .main {
-            height: calc(100vh - 120px);
-            overflow: hidden;
-        }
-
-        .tab-content {
-            display: none;
-            height: 100%;
-            padding: 24px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .card h3 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Lists */
-        .list-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            height: calc(100% - 100px);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .list-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .list-body {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .list-item {
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .list-item:hover {
-            background: var(--bg-hover);
-        }
-
-        .list-item.active {
-            background: var(--bg-hover);
-            border-left: 3px solid var(--accent);
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-hover);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        /* Loading State */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-            color: var(--text-secondary);
-        }
-
-        /* Empty State */
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-            color: var(--text-muted);
-        }
-
-        /* Split Layout */
-        .split-layout {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 16px;
-            height: 100%;
-        }
-
-        /* Code/JSON Display */
-        .code-block {
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 16px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            overflow-x: auto;
-            white-space: pre;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <h1>User Dashboard</h1>
-        <div class="header-status">
-            <span class="status-dot"></span>
-            <span id="connection-status">Connected</span>
-        </div>
-    </header>
-
-    <nav class="nav">
-        <div class="nav-item active" data-tab="overview">Overview</div>
-        <div class="nav-item" data-tab="mailbox">Mailbox</div>
-        <div class="nav-item" data-tab="cosmos">Cosmos Explorer</div>
-        <div class="nav-item" data-tab="graph">Graph DB</div>
-        <div class="nav-item" data-tab="agents">Agent Shell</div>
-        <div class="nav-item" data-tab="manager">Manager</div>
-        <div class="nav-item" data-tab="workspace">Workspace</div>
-        <div class="nav-item" data-tab="research">Research Viz</div>
-    </nav>
-
-    <main class="main">
-        <!-- Overview Tab -->
-        <div class="tab-content active" id="overview">
-            <div class="stats-grid" id="stats-container">
-                <div class="stat-card">
-                    <div class="stat-label">Cosmos Containers</div>
-                    <div class="stat-value" id="stat-containers">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Documents</div>
-                    <div class="stat-value" id="stat-documents">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Active Agents</div>
-                    <div class="stat-value" id="stat-agents">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">System Status</div>
-                    <div class="stat-value" id="stat-health">-</div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h3>System Metrics</h3>
-                    <button class="btn btn-secondary" onclick="loadOverview()">Refresh</button>
-                </div>
-                <div id="system-info" class="code-block">Loading system metrics...</div>
-            </div>
-            
-            <div class="card" style="margin-top: 16px;">
-                <div class="card-header">
-                    <h3>Recent Activity</h3>
-                </div>
-                <div id="recent-activity" class="list-body" style="max-height: 300px; overflow-y: auto;">
-                    <div class="loading">Loading recent activity...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cosmos Explorer Tab -->
-        <div class="tab-content" id="cosmos">
-            <div class="split-layout">
-                <div class="list-container">
-                    <div class="list-header">
-                        <h3>Containers</h3>
-                        <button class="btn btn-primary" onclick="refreshContainers()">Refresh</button>
-                    </div>
-                    <div class="list-body" id="container-list">
-                        <div class="loading">Loading containers...</div>
-                    </div>
-                </div>
-                <div class="list-container">
-                    <div class="list-header">
-                        <h3>Documents</h3>
-                    </div>
-                    <div class="list-body" id="document-list">
-                        <div class="empty-state">Select a container to view documents</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Agents Tab -->
-        <div class="tab-content" id="agents">
-            <div class="split-layout">
-                <div class="list-container">
-                    <div class="list-header">
-                        <h3>Active Agents</h3>
-                        <button class="btn btn-primary" onclick="refreshAgents()">Refresh</button>
-                    </div>
-                    <div class="list-body" id="agent-list">
-                        <div class="loading">Loading agents...</div>
-                    </div>
-                </div>
-                <div class="list-container">
-                    <div class="list-header">
-                        <h3>Agent Details</h3>
-                    </div>
-                    <div class="list-body" id="agent-details">
-                        <div class="empty-state">Select an agent to view details</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mailbox Tab -->
-        <div class="tab-content" id="mailbox">
-            <div class="split-layout">
-                <div class="list-container">
-                    <div class="list-header">
-                        <h3>Folders</h3>
-                    </div>
-                    <div class="list-body">
-                        <div class="list-item active" onclick="filterMessagesByFolder('all')">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span>📥</span>
-                                <span>All Messages</span>
-                                <span id="count-all" style="margin-left: auto; color: var(--text-secondary);">0</span>
-                            </div>
-                        </div>
-                        <div class="list-item" onclick="filterMessagesByFolder('unread')">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span>🔵</span>
-                                <span>Unread</span>
-                                <span id="count-unread" style="margin-left: auto; color: var(--text-secondary);">0</span>
-                            </div>
-                        </div>
-                        <div class="list-item" onclick="filterMessagesByFolder('sent')">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span>📤</span>
-                                <span>Sent</span>
-                                <span id="count-sent" style="margin-left: auto; color: var(--text-secondary);">0</span>
-                            </div>
-                        </div>
-                        <div class="list-item" onclick="filterMessagesByFolder('archived')">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span>📦</span>
-                                <span>Archived</span>
-                                <span id="count-archived" style="margin-left: auto; color: var(--text-secondary);">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="list-container">
-                    <div class="list-header">
-                        <h3>Messages</h3>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-primary" onclick="composeNewMessage()">Compose</button>
-                            <button class="btn btn-secondary" onclick="refreshMessages()">Refresh</button>
-                        </div>
-                    </div>
-                    <div class="list-body" id="message-list">
-                        <div class="loading">Loading messages...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Graph Tab -->
-        <div class="tab-content" id="graph">
-            <div class="card" style="height: 100%;">
-                <div class="card-header">
-                    <h3>Relationship Graph</h3>
-                    <button class="btn btn-primary" onclick="loadGraph()">Load Graph</button>
-                </div>
-                <div id="graph-container" style="height: calc(100% - 60px);">
-                    <div class="empty-state">Click "Load Graph" to visualize relationships</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Manager Tab -->
-        <div class="tab-content" id="manager">
-            <div class="card">
-                <h3>Manager Dashboard</h3>
-                <div id="manager-content">
-                    <div class="empty-state">Manager dashboard loading...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Workspace Tab -->
-        <div class="tab-content" id="workspace">
-            <div class="card">
-                <h3>Workspace Explorer</h3>
-                <div id="workspace-content">
-                    <div class="empty-state">Workspace explorer loading...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Research Tab -->
-        <div class="tab-content" id="research">
-            <div class="card">
-                <h3>Research Visualization</h3>
-                <div id="research-content">
-                    <div class="empty-state">Research visualization loading...</div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
-    <script>
         // Professional Dashboard Implementation - FastAPI Only
         const API_BASE = 'http://localhost:8001/api/v1';
         
@@ -556,23 +44,18 @@
         // Initialize
         console.log('JavaScript file loaded');
         
-        // Global ESC key handler - Safari compatible
+        // Global ESC key handler
         document.addEventListener('keydown', function(e) {
-            console.log('Global key pressed:', e.key, e.keyCode, 'Modal exists:', !!window.currentModal);
-            // Safari compatibility - check both e.key and keyCode
-            if ((e.key === 'Escape' || e.keyCode === 27) && window.currentModal) {
-                console.log('ESC + Modal detected, closing...');
-                e.preventDefault();
-                e.stopPropagation();
+            if (e.key === 'Escape' && window.currentModal) {
                 if (window.currentModal.querySelector('#compose-to')) {
-                    console.log('Closing compose modal');
+                    // It's a compose modal
                     closeComposeModal();
                 } else {
-                    console.log('Closing message viewer modal');
+                    // It's a message viewer modal
                     closeMessageViewer();
                 }
             }
-        }, true); // Use capture phase for Safari
+        });
         
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, starting initialization');
@@ -1110,7 +593,7 @@
                                     ${formatDate(message.timestamp)} ${formatTime(message.timestamp)} | Priority: ${message.priority} | Status: ${message.status}
                                 </div>
                             </div>
-                            <button onclick="console.log('X button clicked'); closeMessageViewer()" 
+                            <button onclick="closeMessageViewer()" 
                                     style="background: none; border: none; color: var(--text-secondary); 
                                            font-size: 18px; cursor: pointer; padding: 4px;">×</button>
                         </div>
@@ -1129,7 +612,7 @@
                                        border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
                             Mark as ${message.status === 'read' ? 'Unread' : 'Read'}
                         </button>
-                        <button onclick="console.log('Archive clicked:', '${messageId}'); archiveMessage('${messageId}')" 
+                        <button onclick="archiveMessage('${messageId}')" 
                                 style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
                                        border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
                             Archive
@@ -1141,28 +624,12 @@
             document.body.appendChild(modal);
             window.currentModal = modal;
             
-            // Make modal focusable and focus it
-            modal.tabIndex = -1;
-            modal.focus();
-            
-            // ESC key directly on modal
-            modal.addEventListener('keydown', function(e) {
-                console.log('Modal keydown:', e.key, e.keyCode);
-                if (e.key === 'Escape' || e.keyCode === 27) {
-                    console.log('ESC on modal, closing...');
-                    closeMessageViewer();
-                    e.preventDefault();
-                }
-            });
-            
-            // Click outside to close
-            modal.addEventListener('click', function(e) {
-                console.log('Modal clicked - target:', e.target, 'modal:', modal);
+            // Simple click outside to close
+            modal.onclick = function(e) {
                 if (e.target === modal) {
-                    console.log('Clicked outside message modal, closing...');
                     closeMessageViewer();
                 }
-            });
+            };
         }
         
         function closeMessageViewer() {
@@ -1309,16 +776,12 @@
             // Store modal reference
             window.currentModal = modal;
             
-            // Safari-compatible click outside to close
-            modal.addEventListener('click', function(e) {
-                console.log('Compose modal clicked - target:', e.target.tagName, 'modal:', modal.tagName);
+            // Simple click outside to close
+            modal.onclick = function(e) {
                 if (e.target === modal) {
-                    console.log('Clicked outside compose modal, closing...');
-                    e.preventDefault();
-                    e.stopPropagation();
                     closeComposeModal();
                 }
-            }, false);
+            };
         }
         
         function closeComposeModal() {
@@ -1471,6 +934,3 @@
         window.toggleMessageStatus = toggleMessageStatus;
         window.archiveMessage = archiveMessage;
         window.replyToMessage = replyToMessage;
-    </script>
-</body>
-</html>
