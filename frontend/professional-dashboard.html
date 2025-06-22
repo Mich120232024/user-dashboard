@@ -1121,7 +1121,9 @@
                             <button onclick="closeMessageViewer()" 
                                     style="background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); 
                                            font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 4px; 
-                                           transition: background 0.2s;">Close</button>
+                                           transition: all 0.2s ease;"
+                                    onmouseover="this.style.background='var(--text-muted)'; this.style.color='white'; this.style.transform='translateY(-1px)'"
+                                    onmouseout="this.style.background='var(--bg-hover)'; this.style.color='var(--text-primary)'; this.style.transform='translateY(0)'">Close</button>
                         </div>
                     </div>
                     <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
@@ -1130,17 +1132,23 @@
                     <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 12px;">
                         <button onclick="replyToMessage('${messageId}')" 
                                 style="padding: 8px 16px; background: var(--accent-blue); color: white; 
-                                       border: none; border-radius: 4px; cursor: pointer;">
+                                       border: none; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
+                                onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.background='var(--accent-blue)'; this.style.transform='translateY(0)'">
                             Reply
                         </button>
                         <button onclick="toggleMessageStatus('${messageId}', '${message.status}')" 
                                 style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
-                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
+                                onmouseover="this.style.background='var(--bg-hover)'; this.style.color='var(--text-primary)'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'; this.style.transform='translateY(0)'">
                             Mark as ${message.status === 'read' ? 'Unread' : 'Read'}
                         </button>
-                        <button onclick="archiveMessage('${messageId}')" 
+                        <button onclick="archiveMessageWithFeedback('${messageId}')" 
                                 style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
-                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;"
+                                onmouseover="this.style.background='var(--warning-amber)'; this.style.color='white'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)'; this.style.transform='translateY(0)'">
                             Archive
                         </button>
                     </div>
@@ -1233,6 +1241,104 @@
                 closeMessageViewer();
                 refreshMessages(); // Refresh to show updated status
             }
+        }
+        
+        async function archiveMessageWithFeedback(messageId) {
+            // Find the archive button and show loading state
+            const archiveBtn = event.target;
+            const originalText = archiveBtn.textContent;
+            archiveBtn.textContent = 'Archiving...';
+            archiveBtn.disabled = true;
+            archiveBtn.style.background = '#6b7280';
+            archiveBtn.style.cursor = 'not-allowed';
+            
+            const success = await updateMessageStatus(messageId, 'archived');
+            if (success) {
+                // Show success feedback
+                archiveBtn.textContent = '✓ Archived';
+                archiveBtn.style.background = 'var(--success-green)';
+                archiveBtn.style.color = 'white';
+                
+                // Show notification
+                showNotification('Message archived successfully');
+                
+                // Smooth transition: fade out modal then refresh
+                const modal = window.currentModal;
+                if (modal) {
+                    modal.style.transition = 'opacity 0.3s ease';
+                    modal.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        closeMessageViewer();
+                        removeMessageFromList(messageId);
+                        updateMessageCounts();
+                    }, 300);
+                }
+            } else {
+                // Show error state
+                archiveBtn.textContent = '✗ Failed';
+                archiveBtn.style.background = 'var(--danger-red)';
+                archiveBtn.style.color = 'white';
+                
+                // Reset after delay
+                setTimeout(() => {
+                    archiveBtn.textContent = originalText;
+                    archiveBtn.disabled = false;
+                    archiveBtn.style.background = 'transparent';
+                    archiveBtn.style.color = 'var(--text-secondary)';
+                    archiveBtn.style.cursor = 'pointer';
+                }, 2000);
+            }
+        }
+        
+        function removeMessageFromList(messageId) {
+            // Update local array
+            const messageIndex = allMessages.findIndex(m => m.id === messageId);
+            if (messageIndex !== -1) {
+                allMessages[messageIndex].status = 'archived';
+            }
+            
+            // Smoothly remove from current view if not in archived folder
+            if (currentFilter !== 'archived') {
+                const messageElement = document.querySelector(`[onclick="viewMessage('${messageId}')"]`);
+                if (messageElement) {
+                    messageElement.style.transition = 'all 0.3s ease';
+                    messageElement.style.opacity = '0';
+                    messageElement.style.transform = 'translateX(-100%)';
+                    
+                    setTimeout(() => {
+                        displayFilteredMessages();
+                    }, 300);
+                }
+            }
+        }
+        
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 2000;
+                background: var(--success-green); color: white; padding: 12px 20px;
+                border-radius: 6px; box-shadow: var(--shadow-lg);
+                font-size: 14px; font-weight: 500;
+                transform: translateX(100%); transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Slide in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Slide out and remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
         }
         
         function replyToMessage(messageId) {
@@ -1509,6 +1615,7 @@
         window.updateMessageStatus = updateMessageStatus;
         window.toggleMessageStatus = toggleMessageStatus;
         window.archiveMessage = archiveMessage;
+        window.archiveMessageWithFeedback = archiveMessageWithFeedback;
         window.replyToMessage = replyToMessage;
     </script>
 </body>
