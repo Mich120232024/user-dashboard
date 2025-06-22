@@ -556,23 +556,30 @@
         // Initialize
         console.log('JavaScript file loaded');
         
-        // Global ESC key handler - Safari compatible
+        // Global ESC key handler - Enhanced Safari compatibility
         document.addEventListener('keydown', function(e) {
-            console.log('Global key pressed:', e.key, e.keyCode, 'Modal exists:', !!window.currentModal);
-            // Safari compatibility - check both e.key and keyCode
-            if ((e.key === 'Escape' || e.keyCode === 27) && window.currentModal) {
-                console.log('ESC + Modal detected, closing...');
+            console.log('Global ESC pressed:', e.key, e.keyCode, e.which, 'Modal exists:', !!window.currentModal);
+            
+            // Multiple Safari compatibility checks
+            const isEscape = e.key === 'Escape' || e.keyCode === 27 || e.which === 27;
+            
+            if (isEscape && window.currentModal) {
+                console.log('ESC detected, preventing default and closing modal');
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // Determine modal type and close appropriately
                 if (window.currentModal.querySelector('#compose-to')) {
-                    console.log('Closing compose modal');
+                    console.log('Closing compose modal via ESC');
                     closeComposeModal();
                 } else {
-                    console.log('Closing message viewer modal');
+                    console.log('Closing message viewer modal via ESC');
                     closeMessageViewer();
                 }
+                return false;
             }
-        }, true); // Use capture phase for Safari
+        }, true);
         
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, starting initialization');
@@ -1088,17 +1095,18 @@
                 await updateMessageStatus(messageId, 'read');
             }
             
-            // Create message viewer modal
+            // Create message viewer modal with Safari-compatible structure
             const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 background: rgba(0,0,0,0.7); z-index: 1000; display: flex; 
-                align-items: center; justify-content: center;
+                align-items: center; justify-content: center; cursor: pointer;
             `;
             
             modal.innerHTML = `
-                <div style="background: var(--bg-card); border-radius: 8px; width: 700px; max-height: 80vh; 
-                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); overflow: hidden;">
+                <div class="modal-content" style="background: var(--bg-card); border-radius: 8px; width: 700px; max-height: 80vh; 
+                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); overflow: hidden; cursor: default;">
                     <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
                         <div style="display: flex; justify-content: space-between; align-items: start;">
                             <div>
@@ -1141,28 +1149,37 @@
             document.body.appendChild(modal);
             window.currentModal = modal;
             
-            // Make modal focusable and focus it
-            modal.tabIndex = -1;
-            modal.focus();
+            // Enhanced Safari focus handling
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
             
-            // ESC key directly on modal
-            modal.addEventListener('keydown', function(e) {
-                console.log('Modal keydown:', e.key, e.keyCode);
-                if (e.key === 'Escape' || e.keyCode === 27) {
-                    console.log('ESC on modal, closing...');
-                    closeMessageViewer();
-                    e.preventDefault();
-                }
-            });
+            // Force focus in Safari-compatible way
+            setTimeout(() => {
+                modal.focus();
+                console.log('Modal focused after timeout');
+            }, 10);
             
-            // Click outside to close
+            // Enhanced click outside handler for Safari
             modal.addEventListener('click', function(e) {
-                console.log('Modal clicked - target:', e.target, 'modal:', modal);
-                if (e.target === modal) {
-                    console.log('Clicked outside message modal, closing...');
+                console.log('Modal click event - target:', e.target.tagName, 'currentTarget:', e.currentTarget.tagName);
+                // Check if click is directly on the modal background (not bubbled from content)
+                if (e.target === modal || e.target === e.currentTarget) {
+                    console.log('Clicked on modal background, closing...');
+                    e.preventDefault();
+                    e.stopPropagation();
                     closeMessageViewer();
                 }
-            });
+            }, false);
+            
+            // Prevent clicks on modal content from bubbling to background
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.addEventListener('click', function(e) {
+                    console.log('Clicked on modal content, preventing bubble');
+                    e.stopPropagation();
+                }, false);
+            }
         }
         
         function closeMessageViewer() {
@@ -1240,17 +1257,18 @@
                 return;
             }
             
-            // Create compose modal
+            // Create compose modal with Safari-compatible structure
             const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 background: rgba(0,0,0,0.7); z-index: 1000; display: flex; 
-                align-items: center; justify-content: center;
+                align-items: center; justify-content: center; cursor: pointer;
             `;
             
             modal.innerHTML = `
-                <div style="background: var(--bg-card); border-radius: 8px; width: 600px; max-height: 80vh; 
-                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);">
+                <div class="modal-content" style="background: var(--bg-card); border-radius: 8px; width: 600px; max-height: 80vh; 
+                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); cursor: default;">
                     <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
                         <h3 style="margin: 0; color: var(--text-primary);">Compose Message</h3>
                     </div>
@@ -1304,21 +1322,41 @@
             `;
             
             document.body.appendChild(modal);
-            document.getElementById('compose-to').focus();
-            
-            // Store modal reference
             window.currentModal = modal;
             
-            // Safari-compatible click outside to close
+            // Enhanced Safari modal setup
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            
+            // Focus the first input after modal setup
+            setTimeout(() => {
+                const composeToField = document.getElementById('compose-to');
+                if (composeToField) {
+                    composeToField.focus();
+                    console.log('Compose modal focused on to field');
+                }
+            }, 10);
+            
+            // Enhanced click outside handler for Safari
             modal.addEventListener('click', function(e) {
-                console.log('Compose modal clicked - target:', e.target.tagName, 'modal:', modal.tagName);
-                if (e.target === modal) {
-                    console.log('Clicked outside compose modal, closing...');
+                console.log('Compose modal click - target:', e.target.tagName, 'currentTarget:', e.currentTarget.tagName);
+                if (e.target === modal || e.target === e.currentTarget) {
+                    console.log('Clicked on compose modal background, closing...');
                     e.preventDefault();
                     e.stopPropagation();
                     closeComposeModal();
                 }
             }, false);
+            
+            // Prevent clicks on modal content from bubbling
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.addEventListener('click', function(e) {
+                    console.log('Clicked on compose modal content, preventing bubble');
+                    e.stopPropagation();
+                }, false);
+            }
         }
         
         function closeComposeModal() {
