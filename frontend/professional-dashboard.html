@@ -1118,9 +1118,10 @@
                                     ${formatDate(message.timestamp)} ${formatTime(message.timestamp)} | Priority: ${message.priority} | Status: ${message.status}
                                 </div>
                             </div>
-                            <button onclick="console.log('X button clicked'); closeMessageViewer()" 
-                                    style="background: none; border: none; color: var(--text-secondary); 
-                                           font-size: 18px; cursor: pointer; padding: 4px;">×</button>
+                            <button onclick="closeMessageViewer()" 
+                                    style="background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); 
+                                           font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 4px; 
+                                           transition: background 0.2s;">Close</button>
                         </div>
                     </div>
                     <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
@@ -1137,7 +1138,7 @@
                                        border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
                             Mark as ${message.status === 'read' ? 'Unread' : 'Read'}
                         </button>
-                        <button onclick="console.log('Archive clicked:', '${messageId}'); archiveMessage('${messageId}')" 
+                        <button onclick="archiveMessage('${messageId}')" 
                                 style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
                                        border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
                             Archive
