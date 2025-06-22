@@ -1078,6 +1078,13 @@
                 align-items: center; justify-content: center;
             `;
             
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeMessageViewer();
+                }
+            });
+            
             modal.innerHTML = `
                 <div style="background: var(--bg-card); border-radius: 8px; width: 700px; max-height: 80vh; 
                             border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); overflow: hidden;">
@@ -1122,6 +1129,15 @@
             
             document.body.appendChild(modal);
             window.currentModal = modal;
+            
+            // Add ESC key listener to close modal
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeMessageViewer();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
         }
         
         function closeMessageViewer() {
@@ -1207,6 +1223,13 @@
                 align-items: center; justify-content: center;
             `;
             
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeComposeModal();
+                }
+            });
+            
             modal.innerHTML = `
                 <div style="background: var(--bg-card); border-radius: 8px; width: 600px; max-height: 80vh; 
                             border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);">
@@ -1267,6 +1290,15 @@
             
             // Store modal reference
             window.currentModal = modal;
+            
+            // Add ESC key listener to close modal
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeComposeModal();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
         }
         
         function closeComposeModal() {
