@@ -1726,6 +1726,7 @@
             } else {
                 container.innerHTML = '<div class="empty-state">Failed to load graph data</div>';
             }
+            }
         }
         
         // Initialize Cytoscape graph visualization
@@ -2409,6 +2410,9 @@
         window.copyDocumentToClipboard = copyDocumentToClipboard;
         window.editCosmosDocument = editCosmosDocument;
         window.deleteCosmosDocument = deleteCosmosDocument;
+        
+        // Initialize on load
+        initialize();
     </script>
 </body>
 </html>
