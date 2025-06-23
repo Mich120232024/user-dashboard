@@ -776,11 +776,28 @@
             const data = await fetchData(`${API_BASE}/cosmos/containers/${containerId}/documents?limit=20`);
             
             if (data && data.documents) {
-                listEl.innerHTML = data.documents.map(doc => `
-                    <div class="list-item">
-                        <div class="code-block">${JSON.stringify(doc, null, 2)}</div>
-                    </div>
-                `).join('');
+                listEl.innerHTML = data.documents.map(doc => {
+                    const docId = doc.id || doc._id || 'unknown';
+                    const docType = doc.type || doc.partitionKey || 'document';
+                    const displayName = doc.agent_name || doc.name || doc.title || docId;
+                    const timestamp = doc._ts ? new Date(doc._ts * 1000).toLocaleString() : 'N/A';
+                    
+                    return `
+                        <div class="list-item" onclick="viewCosmosDocument('${containerId}', '${docId}')" style="cursor: pointer;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; color: var(--text-primary);">${displayName}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                        Type: ${docType} • ID: ${docId}
+                                    </div>
+                                </div>
+                                <div style="text-align: right; font-size: 11px; color: var(--text-muted);">
+                                    ${timestamp}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             } else {
                 listEl.innerHTML = '<div class="empty-state">No documents found</div>';
             }
@@ -1680,7 +1697,23 @@
             const container = document.getElementById('graph-container');
             container.innerHTML = '<div class="loading">Loading graph data...</div>';
             
-            const response = await fetchData(`${API_BASE}/graph/graph?max_nodes=100`);
+            // First try to get agent context memory nodes
+            const contextResponse = await fetchData(`${API_BASE}/cosmos/agent_context_memory/query`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: "SELECT * FROM c WHERE c.type = 'AGENT_CONTEXT_MEMORY'",
+                    parameters: []
+                })
+            });
+            
+            if (contextResponse && contextResponse.documents && contextResponse.documents.length > 0) {
+                // Build graph from context memory
+                const graphData = buildGraphFromContextMemory(contextResponse.documents);
+                initializeCytoscape(container, graphData);
+            } else {
+                // Fall back to regular graph endpoint
+                const response = await fetchData(`${API_BASE}/graph/graph?max_nodes=100`);
             if (response && response.success && response.graph) {
                 const graphData = response.graph;
                 
@@ -1811,12 +1844,16 @@
             });
             
             // Add click handler
-            cy.on('tap', 'node', function(evt) {
+            cy.on('tap', 'node', async function(evt) {
                 const node = evt.target;
                 const data = node.data();
                 
-                // Show node details
-                showToast(`${data.type}: ${data.label}`, 'info');
+                // If it's an agent node, show detailed view
+                if (data.type === 'agent' || data.id.includes('context_')) {
+                    showNodeDetailsModal(data);
+                } else {
+                    showToast(`${data.type}: ${data.label}`, 'info');
+                }
                 
                 // Log details for debugging
                 console.log('Node clicked:', data);
@@ -1824,6 +1861,244 @@
             
             // Store cy instance for later use
             window.cyInstance = cy;
+        }
+        
+        // Build graph from context memory documents
+        function buildGraphFromContextMemory(documents) {
+            const nodes = [];
+            const edges = [];
+            const processedNodes = new Set();
+            
+            documents.forEach(doc => {
+                if (doc.agent_name && !processedNodes.has(doc.agent_name)) {
+                    processedNodes.add(doc.agent_name);
+                    
+                    // Add agent node
+                    nodes.push({
+                        id: doc.agent_name,
+                        label: doc.agent_name.replace(/_/g, ' '),
+                        type: 'agent',
+                        color: doc.layer1_constitutional?.agent_identity?.team === 'Research_Team' ? '#22c55e' : 
+                               doc.layer1_constitutional?.agent_identity?.team === 'Engineering_Team' ? '#3b82f6' : 
+                               doc.layer1_constitutional?.agent_identity?.role?.includes('HEAD') ? '#f59e0b' : '#8b5cf6',
+                        size: doc.layer1_constitutional?.agent_identity?.authority_level === 'management' ? 3 : 1,
+                        properties: {
+                            role: doc.layer1_constitutional?.agent_identity?.role,
+                            team: doc.layer1_constitutional?.agent_identity?.team,
+                            reports_to: doc.layer1_constitutional?.agent_identity?.reports_to,
+                            contextId: doc.id
+                        }
+                    });
+                    
+                    // Add reporting relationships
+                    if (doc.layer1_constitutional?.agent_identity?.reports_to) {
+                        edges.push({
+                            id: `${doc.agent_name}_reports_to_${doc.layer1_constitutional.agent_identity.reports_to}`,
+                            source: doc.agent_name,
+                            target: doc.layer1_constitutional.agent_identity.reports_to,
+                            type: 'reports_to',
+                            label: 'reports to'
+                        });
+                    }
+                }
+            });
+            
+            return { nodes, edges };
+        }
+        
+        // Show node details in a modal
+        function showNodeDetailsModal(nodeData) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 8px; width: 80%; max-width: 800px; max-height: 80vh; 
+                            overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border-color);">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--text-primary);">${nodeData.label || nodeData.id}</h3>
+                        <button onclick="this.closest('div[style*='position: fixed']').remove()" 
+                                style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                        <div class="loading">Loading context data...</div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="this.closest('div[style*='position: fixed']').remove()">Close</button>
+                        ${nodeData.properties?.contextId ? 
+                            `<button class="btn btn-primary" onclick="loadFullContext('${nodeData.properties.contextId}')">View Full Context</button>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load node details
+            if (nodeData.properties?.contextId) {
+                loadNodeContextData(nodeData.properties.contextId, modal.querySelector('div[style*="overflow-y: auto"]'));
+            } else {
+                const content = modal.querySelector('div[style*="overflow-y: auto"]');
+                content.innerHTML = `
+                    <div style="font-family: var(--font-mono); font-size: 13px;">
+                        <h4>Node Properties</h4>
+                        <pre class="code-block">${JSON.stringify(nodeData, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load context data for a node
+        async function loadNodeContextData(contextId, container) {
+            try {
+                const response = await fetchData(`${API_BASE}/cosmos/agent_context_memory/document/${contextId}`);
+                if (response && response.document) {
+                    const doc = response.document;
+                    container.innerHTML = `
+                        <div style="font-family: var(--font-family); font-size: 14px; line-height: 1.6;">
+                            <div class="card" style="margin-bottom: 16px;">
+                                <h4>Agent Identity</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <div><strong>Name:</strong> ${doc.agent_name}</div>
+                                    <div><strong>Role:</strong> ${doc.layer1_constitutional?.agent_identity?.role || 'N/A'}</div>
+                                    <div><strong>Team:</strong> ${doc.layer1_constitutional?.agent_identity?.team || 'N/A'}</div>
+                                    <div><strong>Reports to:</strong> ${doc.layer1_constitutional?.agent_identity?.reports_to || 'N/A'}</div>
+                                    <div><strong>Authority:</strong> ${doc.layer1_constitutional?.agent_identity?.authority_level || 'N/A'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card" style="margin-bottom: 16px;">
+                                <h4>Compliance Status</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <div><strong>Identity Refresh Count:</strong> ${doc.layer2_compliance?.compliance_tracking?.identity_refresh_count || 0}</div>
+                                    <div><strong>Evidence Compliance:</strong> ${doc.layer2_compliance?.compliance_tracking?.evidence_compliance_rate || 0}%</div>
+                                    <div><strong>Task Completion:</strong> ${doc.layer2_compliance?.compliance_tracking?.task_completion_rate || 0}%</div>
+                                    <div><strong>Violations:</strong> ${doc.layer2_compliance?.compliance_tracking?.violations_count || 0}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <h4>Current Session</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <div><strong>Task:</strong> ${doc.layer3_operational?.current_session?.current_task?.description || 'None'}</div>
+                                    <div><strong>Session ID:</strong> ${doc.layer3_operational?.current_session?.session_id || 'N/A'}</div>
+                                    <div><strong>Active TODOs:</strong> ${doc.layer3_operational?.current_session?.active_todos?.length || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="error">Failed to load context data</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Load full context in Cosmos Explorer
+        function loadFullContext(contextId) {
+            // Close modal
+            document.querySelector('div[style*="position: fixed"]')?.remove();
+            
+            // Switch to Cosmos Explorer tab
+            switchTab('cosmos');
+            
+            // Select agent_context_memory container
+            setTimeout(() => {
+                selectContainer('agent_context_memory');
+                // TODO: Implement document search/filter by ID
+                showToast('Switched to Cosmos Explorer - agent_context_memory', 'info');
+            }, 500);
+        }
+        
+        // View Cosmos document in modal
+        async function viewCosmosDocument(containerId, documentId) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 8px; width: 90%; max-width: 900px; height: 80vh; 
+                            display: flex; flex-direction: column; border: 1px solid var(--border-color);">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; color: var(--text-primary);">Document Viewer</h3>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Container: ${containerId} | ID: ${documentId}
+                            </div>
+                        </div>
+                        <button onclick="this.closest('div[style*='position: fixed']').remove()" 
+                                style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding: 20px;">
+                        <div class="loading">Loading document...</div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: space-between;">
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            Container: ${containerId} | ID: ${documentId} | Partition: <span id="doc-partition">Loading...</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="copyDocumentToClipboard('${containerId}', '${documentId}')">📋 Copy</button>
+                            <button class="btn btn-secondary" onclick="editCosmosDocument('${containerId}', '${documentId}')">✏️ Edit</button>
+                            <button class="btn btn-secondary" onclick="deleteCosmosDocument('${containerId}', '${documentId}')">🗑️ Delete</button>
+                            <button class="btn btn-secondary" onclick="this.closest('div[style*='position: fixed']').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load document
+            const contentDiv = modal.querySelector('div[style*="overflow-y: auto"]');
+            try {
+                const response = await fetchData(`${API_BASE}/cosmos/${containerId}/document/${documentId}`);
+                if (response && response.document) {
+                    const doc = response.document;
+                    
+                    // Update partition key display
+                    document.getElementById('doc-partition').textContent = doc.partitionKey || 'N/A';
+                    
+                    // Display formatted document
+                    contentDiv.innerHTML = `
+                        <pre class="code-block" style="margin: 0; white-space: pre-wrap; font-size: 13px;">${JSON.stringify(doc, null, 2)}</pre>
+                    `;
+                } else {
+                    contentDiv.innerHTML = '<div class="error">Failed to load document</div>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Helper functions for document actions
+        async function copyDocumentToClipboard(containerId, documentId) {
+            try {
+                const response = await fetchData(`${API_BASE}/cosmos/${containerId}/document/${documentId}`);
+                if (response && response.document) {
+                    navigator.clipboard.writeText(JSON.stringify(response.document, null, 2));
+                    showToast('Document copied to clipboard', 'success');
+                }
+            } catch (error) {
+                showToast('Failed to copy document', 'error');
+            }
+        }
+        
+        function editCosmosDocument(containerId, documentId) {
+            showToast('Document editing coming soon', 'info');
+        }
+        
+        function deleteCosmosDocument(containerId, documentId) {
+            if (confirm(`Are you sure you want to delete document ${documentId}?`)) {
+                showToast('Document deletion coming soon', 'info');
+            }
         }
         
         // Additional tab functions
@@ -2128,6 +2403,12 @@
         window.loadDocumentation = loadDocumentation;
         window.toggleDocCategory = toggleDocCategory;
         window.viewDocument = viewDocument;
+        window.showNodeDetailsModal = showNodeDetailsModal;
+        window.loadFullContext = loadFullContext;
+        window.viewCosmosDocument = viewCosmosDocument;
+        window.copyDocumentToClipboard = copyDocumentToClipboard;
+        window.editCosmosDocument = editCosmosDocument;
+        window.deleteCosmosDocument = deleteCosmosDocument;
     </script>
 </body>
 </html>
