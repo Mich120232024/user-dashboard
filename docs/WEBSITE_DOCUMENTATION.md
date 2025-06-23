@@ -31,6 +31,61 @@ user-dashboard-clean/
 └── README.md                         # Project overview
 ```
 
+## 📑 Available Tabs
+
+### 1. Overview
+- System health metrics and status
+- Real-time performance monitoring
+- Quick access to recent activities
+
+### 2. Mailbox (Enhanced)
+- **Folder Organization**: All Messages, Unread, Sent, Archived
+- **Message Counts**: Real-time count badges for each folder
+- **Filtering**: Click folders to filter message view
+- **Message Preview**: Shows subject, sender, timestamp, and preview text
+- **Time Display**: Smart relative time (e.g., "5m ago", "2h ago")
+- **Compose Button**: Quick access to create new messages
+
+### 3. Cosmos Explorer
+- Browse all Cosmos DB containers
+- View document counts and partition keys
+- Drill down into individual documents
+- Real-time data updates
+
+### 4. Graph DB
+- Interactive network visualization
+- Agent relationship mapping
+- Cytoscape.js powered diagrams
+
+### 5. Agent Shell
+- Direct agent management interface
+- Status monitoring and control
+- Shell command execution
+
+### 6. Manager
+- System administration tools
+- User management capabilities
+- Configuration controls
+
+### 7. Workspace
+- File and project management
+- Workspace organization tools
+- Resource allocation
+
+### 8. Documentation
+- **Azure Integration**: All docs stored in Azure Blob Storage
+- **58 Total Documents**: Including 18 core files from HEAD_OF_RESEARCH
+- **Categorized View**: Expandable categories with subcategories
+- **Search & Filter**: Find documents by name or tags
+- **Real-time Loading**: Content fetched directly from Azure
+
+### 9. Architecture (New)
+- **HTML Diagram Viewer**: Interactive architecture diagrams
+- **Full-Screen Mode**: Detailed diagram examination
+- **Smart Categories**: Auto-categorization of diagrams
+- **Human-Readable Titles**: Automatic title generation from filenames
+- **Secure Sandboxing**: All HTML content in isolated iframes
+
 ## 🎨 Design System
 
 ### Color Scheme (Port 5001 Reference)

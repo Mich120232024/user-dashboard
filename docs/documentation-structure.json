@@ -1,0 +1,530 @@
+{
+  "version": "2.0",
+  "container": "documentation-assets",
+  "lastUpdated": "2025-06-22",
+  "categories": [
+    {
+      "id": "core-institutional",
+      "name": "Core Institutional Documentation",
+      "path": "core-institutional",
+      "icon": "🏛️",
+      "priority": 1,
+      "description": "Foundational documents for the entire environment",
+      "subcategories": [
+        {
+          "id": "essential-startup",
+          "name": "Essential Startup Documents",
+          "path": "core-institutional",
+          "documents": [
+            {
+              "name": "README - Start Here",
+              "path": "core-institutional/README_START_HERE.md",
+              "type": "markdown",
+              "tags": ["core", "required-reading", "startup"],
+              "description": "Essential starting point for new users and agents"
+            },
+            {
+              "name": "Agent Registry",
+              "path": "core-institutional/1_Agent_Registry.md",
+              "type": "markdown",
+              "tags": ["core", "agents", "registry"],
+              "description": "Complete registry of all agents and their roles"
+            },
+            {
+              "name": "Communication Protocol",
+              "path": "core-institutional/3_Communication_Protocol.md",
+              "type": "markdown",
+              "tags": ["core", "communication", "protocol"],
+              "description": "Standard communication protocols and procedures"
+            },
+            {
+              "name": "Cosmos DB Quick Start",
+              "path": "core-institutional/4_COSMOS_QUICKSTART.md",
+              "type": "markdown",
+              "tags": ["core", "database", "quickstart"],
+              "description": "Quick start guide for Cosmos DB operations"
+            }
+          ]
+        },
+        {
+          "id": "governance",
+          "name": "Governance & Constitution",
+          "path": "core-institutional",
+          "documents": [
+            {
+              "name": "Constitutional Enforcement",
+              "path": "core-institutional/constitutional_enforcement.md",
+              "type": "markdown",
+              "tags": ["governance", "core", "required-reading", "constitution"],
+              "description": "Complete constitutional framework and enforcement procedures"
+            },
+            {
+              "name": "Maintenance Management Procedure",
+              "path": "core-institutional/MAINTENANCE_MANAGEMENT_PROCEDURE.md",
+              "type": "markdown",
+              "tags": ["governance", "maintenance", "procedures"],
+              "description": "System maintenance management and scheduling procedures"
+            },
+            {
+              "name": "Professional Integrity Standards",
+              "path": "core-institutional/governance/professional-integrity-standards.md",
+              "type": "markdown",
+              "tags": ["standards", "integrity", "compliance"],
+              "description": "Professional standards and behavioral requirements"
+            }
+          ]
+        },
+        {
+          "id": "architecture",
+          "name": "System Architecture",
+          "path": "core-institutional/architecture",
+          "documents": [
+            {
+              "name": "Global System Architecture",
+              "path": "core-institutional/architecture/global-system-architecture.md",
+              "type": "markdown",
+              "tags": ["architecture", "system", "overview"],
+              "description": "Complete system architecture and component relationships"
+            },
+            {
+              "name": "Multi-Workspace Structure",
+              "path": "core-institutional/architecture/multi-workspace-structure.md",
+              "type": "markdown",
+              "tags": ["architecture", "workspace", "structure"],
+              "description": "How workspaces interact and maintain independence"
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "name": "Security & Compliance",
+          "path": "core-institutional/security",
+          "documents": [
+            {
+              "name": "Security Framework",
+              "path": "core-institutional/security/security-framework.md",
+              "type": "markdown",
+              "tags": ["security", "framework", "required"],
+              "description": "Comprehensive security policies and procedures"
+            },
+            {
+              "name": "Azure Key Vault Integration",
+              "path": "core-institutional/security/azure-keyvault-guide.md",
+              "type": "markdown",
+              "tags": ["security", "azure", "authentication"],
+              "description": "Key Vault usage and authentication patterns"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workspace-docs",
+      "name": "Workspace Documentation",
+      "path": "workspace-docs",
+      "icon": "🏢",
+      "priority": 2,
+      "description": "Documentation specific to each workspace",
+      "subcategories": [
+        {
+          "id": "engineering-workspace",
+          "name": "Engineering Workspace",
+          "path": "workspace-docs/engineering",
+          "owner": "HEAD_OF_ENGINEERING",
+          "documents": [
+            {
+              "name": "Engineering Workspace Overview",
+              "path": "workspace-docs/engineering/workspace-overview.md",
+              "type": "markdown",
+              "tags": ["engineering", "overview", "workspace"],
+              "description": "Complete guide to the engineering workspace structure and operations"
+            },
+            {
+              "name": "Development Standards",
+              "path": "workspace-docs/engineering/development-standards.md",
+              "type": "markdown",
+              "tags": ["engineering", "standards", "development"],
+              "description": "Coding standards, deployment procedures, and best practices"
+            },
+            {
+              "name": "Infrastructure Management",
+              "path": "workspace-docs/engineering/infrastructure-management.md",
+              "type": "markdown",
+              "tags": ["engineering", "infrastructure", "azure"],
+              "description": "Azure infrastructure deployment and management guide"
+            }
+          ]
+        },
+        {
+          "id": "research-workspace",
+          "name": "Research & Analytics Workspace",
+          "path": "workspace-docs/research",
+          "owner": "HEAD_OF_RESEARCH",
+          "documents": [
+            {
+              "name": "Research Workspace Overview",
+              "path": "workspace-docs/research/workspace-overview.md",
+              "type": "markdown",
+              "tags": ["research", "overview", "workspace"],
+              "description": "Research workspace structure and analytical framework"
+            },
+            {
+              "name": "Data Analysis Methodology",
+              "path": "workspace-docs/research/data-analysis-methodology.md",
+              "type": "markdown",
+              "tags": ["research", "methodology", "analytics"],
+              "description": "Standard methodologies for data analysis and research"
+            },
+            {
+              "name": "FRED Data Integration",
+              "path": "workspace-docs/research/fred-data-integration.md",
+              "type": "markdown",
+              "tags": ["research", "fred", "data"],
+              "description": "FRED data collection and analysis procedures"
+            }
+          ]
+        },
+        {
+          "id": "azure-engineering",
+          "name": "Azure Engineering Service",
+          "path": "workspace-docs/azure-engineering",
+          "owner": "AZURE_INFRASTRUCTURE_AGENT",
+          "documents": [
+            {
+              "name": "Azure Service Catalog",
+              "path": "workspace-docs/azure-engineering/service-catalog.md",
+              "type": "markdown",
+              "tags": ["azure", "services", "catalog"],
+              "description": "Complete catalog of Azure services in use"
+            },
+            {
+              "name": "Deployment Pipelines",
+              "path": "workspace-docs/azure-engineering/deployment-pipelines.md",
+              "type": "markdown",
+              "tags": ["azure", "deployment", "pipelines"],
+              "description": "CI/CD pipeline configuration and management"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "project-docs",
+      "name": "Project Documentation",
+      "path": "project-docs",
+      "icon": "📁",
+      "priority": 3,
+      "description": "Documentation for specific projects",
+      "subcategories": [
+        {
+          "id": "user-dashboard",
+          "name": "User Dashboard Project",
+          "path": "project-docs/user-dashboard",
+          "projectType": "active",
+          "documents": [
+            {
+              "name": "Website Documentation",
+              "path": "project-docs/user-dashboard/WEBSITE_DOCUMENTATION.md",
+              "type": "markdown",
+              "tags": ["project", "dashboard", "overview", "guide"],
+              "description": "Complete website documentation with all features and tabs"
+            },
+            {
+              "name": "Architecture Tab Documentation",
+              "path": "project-docs/user-dashboard/ARCHITECTURE_TAB_DOCUMENTATION.md",
+              "type": "markdown",
+              "tags": ["project", "architecture", "feature", "new"],
+              "description": "Detailed documentation for the Architecture tab implementation"
+            },
+            {
+              "name": "Mailbox Enhancements",
+              "path": "project-docs/user-dashboard/MAILBOX_ENHANCEMENTS.md",
+              "type": "markdown",
+              "tags": ["project", "mailbox", "enhancement", "ux"],
+              "description": "Documentation for mailbox folder system and filtering features"
+            },
+            {
+              "name": "Messaging System Guide",
+              "path": "project-docs/user-dashboard/MESSAGING_SYSTEM.md",
+              "type": "markdown",
+              "tags": ["project", "messaging", "api", "system"],
+              "description": "Comprehensive messaging system documentation"
+            },
+            {
+              "name": "Migration Plan",
+              "path": "project-docs/user-dashboard/MIGRATION_PLAN.md",
+              "type": "markdown",
+              "tags": ["project", "migration", "planning"],
+              "description": "Plan for migrating from old dashboard to new system"
+            }
+          ]
+        },
+        {
+          "id": "fred-platform",
+          "name": "FRED Data Platform",
+          "path": "project-docs/fred-platform",
+          "projectType": "active",
+          "documents": [
+            {
+              "name": "FRED Platform Overview",
+              "path": "project-docs/fred-platform/platform-overview.md",
+              "type": "markdown",
+              "tags": ["project", "fred", "platform"],
+              "description": "FRED data collection and processing platform"
+            },
+            {
+              "name": "Data Pipeline Architecture",
+              "path": "project-docs/fred-platform/pipeline-architecture.md",
+              "type": "markdown",
+              "tags": ["project", "pipeline", "architecture"],
+              "description": "Azure Synapse pipeline architecture and data flow"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-compliance",
+      "name": "Audit & Compliance",
+      "path": "audit-compliance",
+      "icon": "📊",
+      "priority": 4,
+      "description": "Audit trails, compliance reports, and system health",
+      "subcategories": [
+        {
+          "id": "deployment-audits",
+          "name": "Deployment Audits",
+          "path": "audit-compliance/deployments",
+          "documents": [
+            {
+              "name": "Deployment History",
+              "path": "audit-compliance/deployments/deployment-history.md",
+              "type": "markdown",
+              "tags": ["audit", "deployment", "history"],
+              "description": "Complete deployment history with success/failure analysis"
+            },
+            {
+              "name": "Post-Deployment Reviews",
+              "path": "audit-compliance/deployments/post-deployment-reviews.md",
+              "type": "markdown",
+              "tags": ["audit", "review", "deployment"],
+              "description": "Lessons learned from deployments"
+            }
+          ]
+        },
+        {
+          "id": "security-audits",
+          "name": "Security Audits",
+          "path": "audit-compliance/security",
+          "documents": [
+            {
+              "name": "Security Audit Reports",
+              "path": "audit-compliance/security/audit-reports.md",
+              "type": "markdown",
+              "tags": ["audit", "security", "compliance"],
+              "description": "Regular security audit findings and remediation"
+            },
+            {
+              "name": "Access Control Reviews",
+              "path": "audit-compliance/security/access-control-reviews.md",
+              "type": "markdown",
+              "tags": ["audit", "security", "access"],
+              "description": "Periodic access control and permission reviews"
+            }
+          ]
+        },
+        {
+          "id": "performance-audits",
+          "name": "Performance Audits",
+          "path": "audit-compliance/performance",
+          "documents": [
+            {
+              "name": "System Performance Reports",
+              "path": "audit-compliance/performance/performance-reports.md",
+              "type": "markdown",
+              "tags": ["audit", "performance", "metrics"],
+              "description": "System performance metrics and optimization recommendations"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "operational-guides",
+      "name": "Operational Guides",
+      "path": "operational-guides",
+      "icon": "🔧",
+      "priority": 5,
+      "description": "Day-to-day operational procedures and runbooks",
+      "subcategories": [
+        {
+          "id": "core-methods",
+          "name": "Core Methods & Protocols",
+          "path": "operational-guides",
+          "documents": [
+            {
+              "name": "Scientific Method",
+              "path": "operational-guides/scientific_method.md",
+              "type": "markdown",
+              "tags": ["operations", "method", "core", "scientific"],
+              "description": "Scientific methodology for systematic problem solving"
+            },
+            {
+              "name": "Anti-Fabrication Method",
+              "path": "operational-guides/anti_fabrication_method.md",
+              "type": "markdown",
+              "tags": ["operations", "method", "core", "quality"],
+              "description": "Methods for preventing fabrication and ensuring accuracy"
+            },
+            {
+              "name": "Recovery Protocol",
+              "path": "operational-guides/recovery_protocol.md",
+              "type": "markdown",
+              "tags": ["operations", "protocol", "recovery", "emergency"],
+              "description": "System and agent recovery procedures"
+            },
+            {
+              "name": "Memory Update Protocol",
+              "path": "operational-guides/memory_update_protocol.md",
+              "type": "markdown",
+              "tags": ["operations", "protocol", "memory", "maintenance"],
+              "description": "Agent memory management and update procedures"
+            },
+            {
+              "name": "Identity Maintenance Protocol",
+              "path": "operational-guides/identity_maintenance_protocol.md",
+              "type": "markdown",
+              "tags": ["operations", "protocol", "identity", "maintenance"],
+              "description": "Agent identity preservation and maintenance procedures"
+            }
+          ]
+        },
+        {
+          "id": "methodologies",
+          "name": "Alternative Methodologies",
+          "path": "operational-guides",
+          "documents": [
+            {
+              "name": "Alternative Methods",
+              "path": "operational-guides/alternative_methods.md",
+              "type": "markdown",
+              "tags": ["operations", "methods", "alternative", "reference"],
+              "description": "Alternative approaches and methodologies"
+            },
+            {
+              "name": "Questionnaire Template",
+              "path": "operational-guides/questionnaire_template.md",
+              "type": "markdown",
+              "tags": ["operations", "template", "questionnaire"],
+              "description": "Template for structured information gathering"
+            },
+            {
+              "name": "New Initialization Process",
+              "path": "operational-guides/new_init_process.md",
+              "type": "markdown",
+              "tags": ["operations", "initialization", "process"],
+              "description": "Updated agent initialization procedures"
+            }
+          ]
+        },
+        {
+          "id": "maintenance",
+          "name": "Maintenance Procedures",
+          "path": "operational-guides/maintenance",
+          "documents": [
+            {
+              "name": "Daily Maintenance Checklist",
+              "path": "operational-guides/maintenance/daily-checklist.md",
+              "type": "markdown",
+              "tags": ["operations", "maintenance", "daily"],
+              "description": "Daily system maintenance procedures"
+            },
+            {
+              "name": "Database Maintenance Guide",
+              "path": "operational-guides/maintenance/database-maintenance.md",
+              "type": "markdown",
+              "tags": ["operations", "database", "maintenance"],
+              "description": "Database optimization and maintenance procedures"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "templates",
+      "name": "Templates & Standards",
+      "path": "templates",
+      "icon": "📋",
+      "priority": 6,
+      "description": "Reusable templates and documentation standards",
+      "subcategories": [
+        {
+          "id": "memory-architecture",
+          "name": "Memory Architecture",
+          "path": "templates-standards",
+          "documents": [
+            {
+              "name": "Reptilian Core Layer",
+              "path": "templates-standards/REPTILIAN_CORE.yaml",
+              "type": "yaml",
+              "tags": ["template", "memory", "core", "architecture"],
+              "description": "Core reptilian brain layer configuration"
+            },
+            {
+              "name": "Identity Layer",
+              "path": "templates-standards/IDENTITY_LAYER.yaml",
+              "type": "yaml",
+              "tags": ["template", "memory", "identity", "architecture"],
+              "description": "Agent identity layer configuration"
+            },
+            {
+              "name": "Working Context Layer",
+              "path": "templates-standards/WORKING_CONTEXT.yaml",
+              "type": "yaml",
+              "tags": ["template", "memory", "context", "architecture"],
+              "description": "Working context layer configuration"
+            },
+            {
+              "name": "Working Context Schema",
+              "path": "templates-standards/working_context_schema.yaml",
+              "type": "yaml",
+              "tags": ["template", "memory", "schema", "architecture"],
+              "description": "Schema definition for working context structure"
+            }
+          ]
+        },
+        {
+          "id": "doc-templates",
+          "name": "Documentation Templates",
+          "path": "templates/documentation",
+          "documents": [
+            {
+              "name": "Project Documentation Template",
+              "path": "templates/documentation/project-template.md",
+              "type": "markdown",
+              "tags": ["template", "project", "documentation"],
+              "description": "Standard template for project documentation"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "totalCategories": 6,
+    "totalSubcategories": 17,
+    "totalDocuments": 60,
+    "tagIndex": [
+      "governance", "core", "required-reading", "agents", "framework",
+      "standards", "integrity", "compliance", "architecture", "system",
+      "overview", "workspace", "structure", "security", "required",
+      "azure", "authentication", "engineering", "development", "infrastructure",
+      "research", "methodology", "analytics", "fred", "data", "services",
+      "catalog", "deployment", "pipelines", "project", "dashboard", "api",
+      "reference", "messaging", "platform", "pipeline", "audit", "history",
+      "review", "access", "performance", "metrics", "operations", "incident",
+      "runbook", "disaster-recovery", "maintenance", "daily", "database",
+      "template", "documentation"
+    ]
+  }
+}

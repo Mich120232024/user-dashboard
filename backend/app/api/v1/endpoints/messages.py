@@ -91,7 +91,7 @@ async def list_messages(
                 "thread_id": item.get("thread_id")
             })
         
-        return messages
+        return {"messages": messages}
         
     except Exception as e:
         logger.error(f"Error querying messages: {e}")

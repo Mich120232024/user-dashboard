@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Find Syntax Error</title>
+</head>
+<body>
+    <h1>Finding Syntax Error</h1>
+    <pre id="output"></pre>
+    
+    <script>
+        // Override console.error to catch the exact error
+        const originalError = console.error;
+        const output = document.getElementById('output');
+        
+        console.error = function(...args) {
+            output.textContent += `Console Error: ${args.join(' ')}\n\n`;
+            originalError.apply(console, args);
+        };
+        
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            output.textContent += `Window Error:\n`;
+            output.textContent += `Message: ${msg}\n`;
+            output.textContent += `Line: ${lineNo}\n`;
+            output.textContent += `Column: ${columnNo}\n`;
+            output.textContent += `Error: ${error}\n\n`;
+            return true;
+        };
+        
+        // Now load the dashboard in an iframe to capture its errors
+        const iframe = document.createElement('iframe');
+        iframe.src = '/professional-dashboard.html';
+        iframe.style.width = '100%';
+        iframe.style.height = '400px';
+        iframe.onload = function() {
+            output.textContent += 'Dashboard loaded in iframe\n';
+        };
+        document.body.appendChild(iframe);
+    </script>
+</body>
+</html>

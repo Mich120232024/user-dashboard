@@ -9,6 +9,8 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from app.services.async_cosmos_db import get_cosmos_service, AsyncCosmosDBService
 from app.services.async_cache import async_cached
+import os
+import aiofiles
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -221,6 +223,56 @@ async def get_agent_details(
         
     except Exception as e:
         logger.error(f"Error getting agent details: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/agent/{agent_name}/file")
+async def get_agent_file_content(
+    agent_name: str,
+    file_path: str
+):
+    """Get content of agent shell file"""
+    try:
+        # Construct base path - adapt based on actual system structure
+        base_path = "/Users/mikaeleage/Research & Analytics Services"
+        
+        # Sanitize and construct full path
+        if file_path.startswith('/'):
+            full_path = os.path.join(base_path, file_path.lstrip('/'))
+        else:
+            full_path = os.path.join(base_path, file_path)
+            
+        # Security check - ensure path is within allowed directories
+        allowed_prefixes = [
+            os.path.join(base_path, "Agent_Shells"),
+            os.path.join(base_path, "System Enforcement Workspace", "Initial_Prompts"),
+            os.path.join(base_path, "Engineering Workspace"),
+            os.path.join(base_path, "Research Workspace")
+        ]
+        
+        if not any(full_path.startswith(prefix) for prefix in allowed_prefixes):
+            raise HTTPException(status_code=403, detail="Access denied to this file path")
+            
+        # Check if file exists
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+            
+        # Read file content
+        async with aiofiles.open(full_path, 'r', encoding='utf-8') as f:
+            content = await f.read()
+            
+        return {
+            'success': True,
+            'file_path': file_path,
+            'content': content,
+            'size': len(content),
+            'lines': content.count('\n') + 1
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reading agent file: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

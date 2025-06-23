@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "container": "documentation-assets",
+  "categories": [
+    {
+      "name": "Messaging System",
+      "path": "messaging-system",
+      "description": "Complete messaging system documentation with CRUD operations and API reference",
+      "document_count": 1,
+      "documents": [
+        {
+          "name": "Complete Messaging System Guide",
+          "path": "messaging-system/messaging-system-guide.md",
+          "type": "markdown",
+          "description": "Comprehensive guide covering architecture, API endpoints, and usage patterns"
+        }
+      ]
+    },
+    {
+      "name": "Website Documentation",
+      "path": "website-documentation", 
+      "description": "User dashboard architecture and technical documentation",
+      "document_count": 1,
+      "documents": [
+        {
+          "name": "Dashboard Architecture Guide",
+          "path": "website-documentation/dashboard-architecture.md",
+          "type": "markdown",
+          "description": "Complete architecture overview, security, and deployment documentation"
+        }
+      ]
+    },
+    {
+      "name": "API Reference",
+      "path": "api-reference",
+      "description": "Complete API documentation for all endpoints",
+      "document_count": 0,
+      "documents": []
+    },
+    {
+      "name": "Deployment Guides",
+      "path": "deployment-guides",
+      "description": "Azure deployment and infrastructure setup guides",
+      "document_count": 0,
+      "documents": []
+    },
+    {
+      "name": "Architecture Diagrams",
+      "path": "architecture-diagrams",
+      "description": "Visual system architecture and data flow diagrams",
+      "document_count": 0,
+      "documents": []
+    }
+  ]
+}

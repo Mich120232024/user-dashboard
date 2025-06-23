@@ -1,250 +1,450 @@
-"""Documentation API endpoints matching Flask dashboard functionality."""
-
-import logging
+"""
+Documentation endpoints for Azure Blob Storage integration
+"""
 import os
-from datetime import datetime
+import json
+from pathlib import Path
 from typing import Dict, List, Optional, Any
-
 from fastapi import APIRouter, HTTPException, Query, Depends
-from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
+from fastapi.responses import FileResponse, Response
+from azure.storage.blob import BlobServiceClient
+from app.core.config import settings
 
 router = APIRouter()
 
-@router.get("/structure")
-async def get_docs_structure():
-    """Get documentation structure matching Flask /api/docs/structure."""
+# Azure Blob Storage configuration
+BLOB_ACCOUNT_NAME = "contextstore1750317480"
+BLOB_CONTAINER_NAME = "documentation-assets"
+
+def get_blob_client():
+    """Get Azure Blob Storage client"""
     try:
-        # Simulate documentation structure from Flask dashboard
-        docs_structure = {
-            'folders': [
-                {
-                    'name': 'API Documentation',
-                    'path': '/docs/api',
-                    'type': 'folder',
-                    'children': [
-                        {'name': 'FastAPI Endpoints', 'path': '/docs/api/fastapi.md', 'type': 'file', 'size': '15KB'},
-                        {'name': 'Authentication', 'path': '/docs/api/auth.md', 'type': 'file', 'size': '8KB'},
-                        {'name': 'Cosmos DB Integration', 'path': '/docs/api/cosmos.md', 'type': 'file', 'size': '12KB'}
-                    ]
-                },
-                {
-                    'name': 'System Architecture',
-                    'path': '/docs/architecture',
-                    'type': 'folder',
-                    'children': [
-                        {'name': 'Overview', 'path': '/docs/architecture/overview.md', 'type': 'file', 'size': '20KB'},
-                        {'name': 'Memory Layers', 'path': '/docs/architecture/memory.md', 'type': 'file', 'size': '18KB'},
-                        {'name': 'Agent System', 'path': '/docs/architecture/agents.md', 'type': 'file', 'size': '25KB'}
-                    ]
-                },
-                {
-                    'name': 'User Guides',
-                    'path': '/docs/guides',
-                    'type': 'folder',
-                    'children': [
-                        {'name': 'Getting Started', 'path': '/docs/guides/getting-started.md', 'type': 'file', 'size': '10KB'},
-                        {'name': 'Dashboard Usage', 'path': '/docs/guides/dashboard.md', 'type': 'file', 'size': '16KB'},
-                        {'name': 'Troubleshooting', 'path': '/docs/guides/troubleshooting.md', 'type': 'file', 'size': '14KB'}
-                    ]
-                },
-                {
-                    'name': 'Configuration',
-                    'path': '/docs/config',
-                    'type': 'folder', 
-                    'children': [
-                        {'name': 'Environment Setup', 'path': '/docs/config/environment.md', 'type': 'file', 'size': '8KB'},
-                        {'name': 'Database Config', 'path': '/docs/config/database.md', 'type': 'file', 'size': '12KB'},
-                        {'name': 'Security Settings', 'path': '/docs/config/security.md', 'type': 'file', 'size': '15KB'}
-                    ]
-                }
-            ],
-            'stats': {
-                'total_files': 12,
-                'total_size': '173KB',
-                'last_updated': datetime.utcnow().isoformat()
-            }
-        }
+        # Try to get connection string from settings/environment
+        connection_string = getattr(settings, 'azure_storage_connection_string', None)
+        if connection_string:
+            return BlobServiceClient.from_connection_string(connection_string)
+        else:
+            # Fallback to managed identity with storage account name
+            from azure.identity import DefaultAzureCredential
+            account_url = f"https://{BLOB_ACCOUNT_NAME}.blob.core.windows.net"
+            try:
+                return BlobServiceClient(account_url, credential=DefaultAzureCredential())
+            except Exception:
+                return None
+    except Exception:
+        return None
+
+@router.get("/structure")
+async def get_documentation_structure() -> Dict[str, Any]:
+    """
+    Get documentation structure from Azure Blob Storage
+    Falls back to local structure if Azure is unavailable
+    """
+    try:
+        blob_client = get_blob_client()
         
-        return {
-            'success': True,
-            'structure': docs_structure,
-            'timestamp': datetime.utcnow().isoformat()
-        }
+        if blob_client:
+            # Try to fetch structure from Azure Blob Storage
+            try:
+                container_client = blob_client.get_container_client(BLOB_CONTAINER_NAME)
+                
+                # First try to get documentation-structure.json
+                try:
+                    structure_blob = container_client.get_blob_client("documentation-structure.json")
+                    structure_data = structure_blob.download_blob().readall().decode('utf-8')
+                    structure = json.loads(structure_data)
+                    structure["source"] = "azure_blob_index"
+                    return structure
+                except Exception:
+                    # Try old structure.json
+                    try:
+                        structure_blob = container_client.get_blob_client("structure.json")
+                        structure_data = structure_blob.download_blob().readall().decode('utf-8')
+                        structure = json.loads(structure_data)
+                        structure["source"] = "azure_blob_index_legacy"
+                        return structure
+                    except Exception:
+                        # Fallback to listing blobs and organizing
+                        blobs = container_client.list_blobs()
+                        structure = organize_blob_structure(blobs)
+                        return structure
+                    
+            except Exception as e:
+                print(f"Azure Blob error: {e}")
+                # Fall through to local fallback
+        
+        # Fallback to local documentation structure
+        return get_local_documentation_structure()
         
     except Exception as e:
-        logger.error(f"Error getting docs structure: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error fetching documentation structure: {str(e)}")
+
+def organize_blob_structure(blobs) -> Dict[str, Any]:
+    """Organize blob list into categorized structure"""
+    categories = {}
+    
+    for blob in blobs:
+        # Parse blob path to determine category
+        path_parts = blob.name.split('/')
+        if len(path_parts) >= 2:
+            category = path_parts[0]
+            filename = path_parts[-1]
+            
+            if category not in categories:
+                categories[category] = {
+                    "name": category.replace('-', ' ').title(),
+                    "path": category,
+                    "documents": []
+                }
+            
+            # Determine file type
+            file_type = get_file_type(filename)
+            
+            categories[category]["documents"].append({
+                "name": filename,
+                "path": blob.name,
+                "type": file_type,
+                "size": blob.size if hasattr(blob, 'size') else 0,
+                "last_modified": blob.last_modified.isoformat() if hasattr(blob, 'last_modified') else None
+            })
+    
+    return {
+        "categories": list(categories.values()),
+        "source": "azure_blob"
+    }
+
+def get_local_documentation_structure() -> Dict[str, Any]:
+    """Get local documentation structure as fallback"""
+    # Get current documentation files
+    docs_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "docs"
+    
+    # First try to read documentation-structure.json
+    structure_file = docs_dir / "documentation-structure.json"
+    if structure_file.exists():
+        try:
+            with open(structure_file, 'r', encoding='utf-8') as f:
+                structure = json.load(f)
+                structure["source"] = "local_structure_file"
+                return structure
+        except Exception as e:
+            print(f"Error reading structure file: {e}")
+    
+    # Fallback to listing files
+    local_docs = []
+    
+    if docs_dir.exists():
+        for file_path in docs_dir.glob("*"):
+            if file_path.is_file():
+                local_docs.append({
+                    "name": file_path.name,
+                    "path": f"docs/{file_path.name}",
+                    "type": get_file_type(file_path.name),
+                    "size": file_path.stat().st_size,
+                    "last_modified": None
+                })
+    
+    # Check which docs actually exist
+    messaging_exists = any("MESSAGING" in doc["name"] for doc in local_docs)
+    website_exists = any("WEBSITE" in doc["name"] for doc in local_docs)
+    
+    return {
+        "categories": [
+            {
+                "name": "Messaging System",
+                "path": "messaging",
+                "documents": [
+                    {
+                        "name": "Complete Messaging System Guide",
+                        "path": "MESSAGING_SYSTEM.md",
+                        "type": "markdown",
+                        "description": "Comprehensive guide covering architecture, API endpoints, and usage patterns"
+                    }
+                ]
+            },
+            {
+                "name": "Website Documentation",
+                "path": "website", 
+                "documents": [
+                    {
+                        "name": "Dashboard Architecture Guide", 
+                        "path": "WEBSITE_DOCUMENTATION.md",
+                        "type": "markdown",
+                        "description": "Complete architecture overview, security, and deployment documentation"
+                    }
+                ]
+            },
+            {
+                "name": "Local Documentation",
+                "path": "local",
+                "documents": local_docs
+            }
+        ],
+        "source": "local_fallback"
+    }
+
+def get_file_type(filename: str) -> str:
+    """Determine file type from extension"""
+    extension = Path(filename).suffix.lower()
+    
+    type_mapping = {
+        '.md': 'markdown',
+        '.json': 'json',
+        '.yaml': 'yaml',
+        '.yml': 'yaml',
+        '.txt': 'text',
+        '.pdf': 'pdf',
+        '.png': 'image',
+        '.jpg': 'image',
+        '.jpeg': 'image',
+        '.svg': 'image',
+        '.html': 'html',
+        '.css': 'css',
+        '.js': 'javascript',
+        '.py': 'python'
+    }
+    
+    return type_mapping.get(extension, 'unknown')
 
 @router.get("/content")
-async def get_doc_content(path: str = Query(..., description="Document path")):
-    """Get documentation content matching Flask /api/docs/content."""
+async def get_document_content(path: str = Query(..., description="Document path")):
+    """
+    Get document content from Azure Blob Storage or local files
+    """
     try:
-        # Simulate document content based on path
-        content_map = {
-            '/docs/api/fastapi.md': '''# FastAPI Endpoints
-
-## Authentication Endpoints
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/logout` - User logout
-- `GET /api/v1/auth/me` - Get current user
-
-## Cosmos DB Endpoints
-- `GET /api/v1/cosmos/containers` - List containers
-- `GET /api/v1/cosmos/containers/{id}/documents` - Get documents
-- `POST /api/v1/cosmos/search` - Search documents
-
-## Agent Management
-- `GET /api/v1/agents/status` - Get agent status
-- `GET /api/v1/agents/agent/{name}/details` - Get agent details
-- `GET /api/v1/agents/health` - System health
-
-## Live Data
-- `GET /api/v1/live/agents` - Live agent monitoring
-- `GET /api/v1/live/core-documents` - Core documents
-- `GET /api/v1/live/system-health` - System health monitoring
-
-## Memory Layers
-- `GET /api/v1/memory/layers` - Get memory layer structure
-- `GET /api/v1/memory/layer/{id}` - Get specific layer details
-''',
-            '/docs/architecture/overview.md': '''# System Architecture Overview
-
-## Components
-
-### Frontend
-- **Framework**: Vanilla JavaScript with Vite
-- **Port**: 3001
-- **Features**: Real-time dashboard, 8 functional tabs
-
-### Backend  
-- **Framework**: FastAPI
-- **Port**: 8001
-- **Database**: Azure Cosmos DB
-
-### Memory System
-4-layer architecture:
-1. **Constitutional Identity** - Immutable core principles
-2. **Compliance Dynamics** - Dynamic rules and governance
-3. **Operational Context** - Working memory and current state
-4. **Log Analysis** - Historical data and performance metrics
-
-### Agent System
-- Live monitoring and management
-- Journal entries and memory contexts
-- Task tracking and completion
-- Real-time status updates
-''',
-            '/docs/guides/getting-started.md': '''# Getting Started
-
-## Prerequisites
-- Python 3.9+
-- Node.js 18+
-- Azure Cosmos DB account
-
-## Installation
-
-### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## Configuration
-1. Copy `.env.example` to `.env`
-2. Update Cosmos DB credentials
-3. Set authentication secrets
-
-## First Steps
-1. Access dashboard at http://localhost:3001
-2. Navigate through tabs to explore features
-3. Check system health in monitoring tab
-'''
-        }
+        # First try Azure Blob Storage
+        blob_client = get_blob_client()
         
-        content = content_map.get(path, f'# Document Not Found\n\nThe requested document at `{path}` was not found.')
+        if blob_client:
+            try:
+                blob_client_instance = blob_client.get_blob_client(
+                    container=BLOB_CONTAINER_NAME, 
+                    blob=path
+                )
+                
+                # Download blob content
+                blob_data = blob_client_instance.download_blob()
+                content = blob_data.readall().decode('utf-8')
+                
+                return Response(
+                    content=content,
+                    media_type="text/plain",
+                    headers={"X-Source": "azure_blob"}
+                )
+            except Exception as e:
+                print(f"Azure Blob error for {path}: {e}")
+                # Fall through to local fallback
+        
+        # Fallback to local files
+        return await get_local_document_content(path)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching document content: {str(e)}")
+
+async def get_local_document_content(path: str):
+    """Get document content from local files"""
+    try:
+        # Get base docs directory 
+        docs_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "docs"
+        
+        # Resolve local file path
+        if path.startswith('docs/'):
+            # Remove 'docs/' prefix and look in docs directory
+            filename = path[5:]  # Remove 'docs/' prefix
+            file_path = docs_dir / filename
+        else:
+            # Use the full path within docs directory
+            file_path = docs_dir / path
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+        
+        # Read file content
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        return Response(
+            content=content,
+            media_type="text/plain", 
+            headers={"X-Source": "local_file"}
+        )
+        
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading document: {str(e)}")
+
+@router.get("/download")
+async def download_document(path: str = Query(..., description="Document path")):
+    """
+    Download document from Azure Blob Storage or local files
+    """
+    try:
+        # First try Azure Blob Storage
+        blob_client = get_blob_client()
+        
+        if blob_client:
+            try:
+                blob_client_instance = blob_client.get_blob_client(
+                    container=BLOB_CONTAINER_NAME,
+                    blob=path
+                )
+                
+                # Get blob properties for filename
+                blob_properties = blob_client_instance.get_blob_properties()
+                filename = Path(path).name
+                
+                # Download blob content
+                blob_data = blob_client_instance.download_blob()
+                content = blob_data.readall()
+                
+                return Response(
+                    content=content,
+                    media_type="application/octet-stream",
+                    headers={
+                        "Content-Disposition": f"attachment; filename={filename}",
+                        "X-Source": "azure_blob"
+                    }
+                )
+            except Exception as e:
+                print(f"Azure Blob download error for {path}: {e}")
+                # Fall through to local fallback
+        
+        # Fallback to local files
+        return await download_local_document(path)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading document: {str(e)}")
+
+async def download_local_document(path: str):
+    """Download document from local files"""
+    try:
+        # Get base docs directory (same as content function)
+        docs_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "docs"
+        
+        # Resolve local file path
+        if path.startswith('docs/'):
+            # Remove 'docs/' prefix and look in docs directory
+            filename = path[5:]  # Remove 'docs/' prefix
+            file_path = docs_dir / filename
+        else:
+            # Use the full path within docs directory
+            file_path = docs_dir / path
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+        
+        return FileResponse(
+            path=str(file_path),
+            filename=file_path.name,
+            headers={"X-Source": "local_file"}
+        )
+        
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading document: {str(e)}")
+
+@router.post("/sync")
+async def sync_documentation():
+    """
+    Sync local documentation to Azure Blob Storage
+    This implements the maintenance requirement for documentation publication
+    """
+    try:
+        blob_client = get_blob_client()
+        
+        if not blob_client:
+            raise HTTPException(status_code=503, detail="Azure Blob Storage not available")
+        
+        container_client = blob_client.get_container_client(BLOB_CONTAINER_NAME)
+        
+        # Ensure container exists
+        try:
+            container_client.create_container()
+        except Exception:
+            pass  # Container already exists
+        
+        # Sync local docs directory
+        docs_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "docs"
+        synced_files = []
+        
+        if docs_dir.exists():
+            for file_path in docs_dir.rglob("*"):
+                if file_path.is_file():
+                    # Calculate relative path for blob name
+                    relative_path = file_path.relative_to(docs_dir.parent)
+                    blob_name = str(relative_path).replace('\\', '/')
+                    
+                    # Upload file to blob storage
+                    with open(file_path, 'rb') as data:
+                        blob_client_instance = container_client.get_blob_client(blob_name)
+                        blob_client_instance.upload_blob(data, overwrite=True)
+                    
+                    synced_files.append({
+                        "local_path": str(file_path),
+                        "blob_path": blob_name,
+                        "size": file_path.stat().st_size
+                    })
         
         return {
-            'success': True,
-            'path': path,
-            'content': content,
-            'content_type': 'markdown',
-            'size': len(content),
-            'last_modified': datetime.utcnow().isoformat(),
-            'timestamp': datetime.utcnow().isoformat()
+            "status": "success",
+            "synced_files": len(synced_files),
+            "files": synced_files,
+            "container": BLOB_CONTAINER_NAME
         }
         
     except Exception as e:
-        logger.error(f"Error getting doc content: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error syncing documentation: {str(e)}")
 
-@router.get("/search")
-async def search_documentation(q: str = Query(..., description="Search query")):
-    """Search documentation matching Flask /api/docs/search."""
+@router.get("/debug")
+async def debug_paths():
+    """Debug path resolution"""
     try:
-        # Simulate search results
-        search_results = []
+        docs_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "docs"
+        return {
+            "current_file": str(Path(__file__)),
+            "docs_dir_path": str(docs_dir),
+            "docs_exists": docs_dir.exists(),
+            "docs_contents": [f.name for f in docs_dir.glob("*")] if docs_dir.exists() else [],
+            "resolved_path": str(docs_dir.resolve())
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/health")
+async def check_documentation_health():
+    """
+    Check documentation system health
+    """
+    try:
+        blob_client = get_blob_client()
+        azure_available = blob_client is not None
         
-        if 'api' in q.lower():
-            search_results.append({
-                'path': '/docs/api/fastapi.md',
-                'title': 'FastAPI Endpoints',
-                'excerpt': 'Complete list of FastAPI endpoints for authentication, Cosmos DB, and agent management...',
-                'relevance': 0.95
-            })
+        # Check local documentation
+        docs_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "docs"
+        local_docs_count = len(list(docs_dir.glob("*"))) if docs_dir.exists() else 0
         
-        if 'agent' in q.lower():
-            search_results.extend([
-                {
-                    'path': '/docs/architecture/agents.md',
-                    'title': 'Agent System',
-                    'excerpt': 'Detailed explanation of the agent management system, including monitoring and task tracking...',
-                    'relevance': 0.90
-                },
-                {
-                    'path': '/docs/api/fastapi.md',
-                    'title': 'Agent Management API',
-                    'excerpt': 'Agent management endpoints for status, details, and health monitoring...',
-                    'relevance': 0.85
-                }
-            ])
-        
-        if 'memory' in q.lower():
-            search_results.append({
-                'path': '/docs/architecture/memory.md',
-                'title': 'Memory Layers',
-                'excerpt': '4-layer memory architecture with constitutional identity, compliance dynamics...',
-                'relevance': 0.88
-            })
-        
-        if 'setup' in q.lower() or 'install' in q.lower():
-            search_results.append({
-                'path': '/docs/guides/getting-started.md',
-                'title': 'Getting Started',
-                'excerpt': 'Complete setup guide for backend and frontend installation...',
-                'relevance': 0.92
-            })
-        
-        # Sort by relevance
-        search_results.sort(key=lambda x: x['relevance'], reverse=True)
+        # Check Azure Blob if available
+        azure_docs_count = 0
+        if azure_available:
+            try:
+                container_client = blob_client.get_container_client(BLOB_CONTAINER_NAME)
+                blobs = list(container_client.list_blobs())
+                azure_docs_count = len(blobs)
+            except Exception:
+                azure_available = False
         
         return {
-            'success': True,
-            'query': q,
-            'results': search_results,
-            'total_count': len(search_results),
-            'timestamp': datetime.utcnow().isoformat()
+            "status": "healthy",
+            "azure_blob_available": azure_available,
+            "local_docs_count": local_docs_count,
+            "azure_docs_count": azure_docs_count,
+            "documentation_source": "azure_blob" if azure_available else "local_fallback"
         }
         
     except Exception as e:
-        logger.error(f"Error searching documentation: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "status": "error",
+            "error": str(e),
+            "documentation_source": "local_fallback"
+        }

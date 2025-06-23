@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     agent_management_api_url: Optional[AnyHttpUrl] = None
     message_service_api_url: Optional[AnyHttpUrl] = None
     
+    # Azure Blob Storage
+    azure_storage_account_name: Optional[str] = None
+    azure_storage_container_name: Optional[str] = None
+    azure_storage_connection_string: Optional[str] = None
+    
     # Logging Configuration
     log_level: str = "INFO"
     log_format: str = "json"  # json or plain

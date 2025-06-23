@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     agents, auth, messages, users, websocket, documents, cosmos,
-    blob, memory, monitoring, graph, live_data, memory_layers, docs, agents_async, agents_simple
+    blob, memory, monitoring, graph, live_data, memory_layers, docs, agents_async, agents_simple, architecture
 )
 
 api_router = APIRouter()
@@ -29,3 +29,4 @@ api_router.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 api_router.include_router(live_data.router, prefix="/live", tags=["live-data"])
 api_router.include_router(memory_layers.router, prefix="/memory-layers", tags=["memory-layers-compat"])
 api_router.include_router(docs.router, prefix="/docs", tags=["documentation"])
+api_router.include_router(architecture.router, prefix="/architecture", tags=["architecture"])

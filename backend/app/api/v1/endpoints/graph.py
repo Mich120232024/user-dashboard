@@ -329,6 +329,71 @@ async def get_graph_edges(
         logger.error(f"Error getting graph edges: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/data")
+async def get_graph_data():
+    """Get simple agent hierarchy graph data."""
+    try:
+        # Define agent hierarchy nodes
+        nodes = [
+            # Leadership
+            {"data": {"id": "BUSINESS_OWNER", "label": "Business Owner", "category": "leadership", "level": 0}},
+            {"data": {"id": "HEAD_OF_ENGINEERING", "label": "Head of Engineering", "category": "leadership", "level": 1}},
+            {"data": {"id": "HEAD_OF_RESEARCH", "label": "Head of Research", "category": "leadership", "level": 1}},
+            
+            # Engineering Team
+            {"data": {"id": "AZURE_INFRASTRUCTURE_AGENT", "label": "Azure Infrastructure", "category": "engineering", "level": 2}},
+            {"data": {"id": "FULL_STACK_SOFTWARE_ENGINEER", "label": "Full Stack Engineer", "category": "engineering", "level": 2}},
+            {"data": {"id": "DATA_ANALYST", "label": "Data Analyst", "category": "engineering", "level": 2}},
+            
+            # Research Team
+            {"data": {"id": "RESEARCH_ANALYST_FRED", "label": "FRED Analyst", "category": "research", "level": 2}},
+            {"data": {"id": "RESEARCH_ANALYST_AZURE", "label": "Azure Analyst", "category": "research", "level": 2}},
+            {"data": {"id": "RESEARCH_ANALYST_RISK", "label": "Risk Analyst", "category": "research", "level": 2}},
+            
+            # Infrastructure
+            {"data": {"id": "COSMOS_DB", "label": "Cosmos DB", "category": "infrastructure", "shape": "box"}},
+            {"data": {"id": "AZURE_SYNAPSE", "label": "Azure Synapse", "category": "infrastructure", "shape": "box"}},
+            {"data": {"id": "FRED_API", "label": "FRED API", "category": "infrastructure", "shape": "box"}},
+            {"data": {"id": "USER_DASHBOARD", "label": "User Dashboard", "category": "infrastructure", "shape": "box"}},
+        ]
+        
+        # Define relationships
+        edges = [
+            # Reporting structure
+            {"data": {"source": "HEAD_OF_ENGINEERING", "target": "BUSINESS_OWNER", "label": "reports to"}},
+            {"data": {"source": "HEAD_OF_RESEARCH", "target": "BUSINESS_OWNER", "label": "reports to"}},
+            
+            # Engineering team
+            {"data": {"source": "AZURE_INFRASTRUCTURE_AGENT", "target": "HEAD_OF_ENGINEERING", "label": "reports to"}},
+            {"data": {"source": "FULL_STACK_SOFTWARE_ENGINEER", "target": "HEAD_OF_ENGINEERING", "label": "reports to"}},
+            {"data": {"source": "DATA_ANALYST", "target": "HEAD_OF_ENGINEERING", "label": "reports to"}},
+            
+            # Research team
+            {"data": {"source": "RESEARCH_ANALYST_FRED", "target": "HEAD_OF_RESEARCH", "label": "reports to"}},
+            {"data": {"source": "RESEARCH_ANALYST_AZURE", "target": "HEAD_OF_RESEARCH", "label": "reports to"}},
+            {"data": {"source": "RESEARCH_ANALYST_RISK", "target": "HEAD_OF_RESEARCH", "label": "reports to"}},
+            
+            # Collaboration
+            {"data": {"source": "HEAD_OF_ENGINEERING", "target": "HEAD_OF_RESEARCH", "label": "collaborates"}},
+            
+            # System connections
+            {"data": {"source": "DATA_ANALYST", "target": "FRED_API", "label": "extracts data"}},
+            {"data": {"source": "DATA_ANALYST", "target": "AZURE_SYNAPSE", "label": "loads data"}},
+            {"data": {"source": "AZURE_INFRASTRUCTURE_AGENT", "target": "COSMOS_DB", "label": "manages"}},
+            {"data": {"source": "FULL_STACK_SOFTWARE_ENGINEER", "target": "USER_DASHBOARD", "label": "develops"}},
+            {"data": {"source": "USER_DASHBOARD", "target": "COSMOS_DB", "label": "reads from"}},
+        ]
+        
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "layout": "hierarchical"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating graph data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/graph")
 async def get_full_graph(
     max_nodes: int = Query(50, ge=10, le=200),

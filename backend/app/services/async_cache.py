@@ -11,8 +11,9 @@ from typing import Any, Optional, Union
 from datetime import timedelta
 from functools import wraps
 
-import aioredis
-from aioredis import Redis
+# Temporarily disabled for dependency issues
+# import aioredis  
+# from aioredis import Redis
 
 logger = logging.getLogger(__name__)
 
@@ -25,19 +26,21 @@ class AsyncCacheService:
         self.redis_pool = None
         self._redis = None
         
-    async def get_redis(self) -> Redis:
+    async def get_redis(self) -> Optional[Any]:
         """Get Redis connection with pooling"""
         if self._redis is None:
             try:
-                self._redis = aioredis.from_url(
-                    self.redis_url,
-                    encoding="utf-8",
-                    decode_responses=True,
-                    max_connections=20,
-                    retry_on_timeout=True
-                )
-                # Test connection
-                await self._redis.ping()
+                # Redis temporarily disabled due to dependency issues
+                # self._redis = aioredis.from_url(
+                #     self.redis_url,
+                #     encoding="utf-8",
+                #     decode_responses=True,
+                #     max_connections=20,
+                #     retry_on_timeout=True
+                # )
+                # # Test connection
+                # await self._redis.ping()
+                logger.warning("Redis cache disabled - returning None")
                 logger.info("Redis connection established")
             except Exception as e:
                 logger.warning(f"Redis not available: {e}")
