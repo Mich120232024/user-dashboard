@@ -2380,7 +2380,7 @@
             // Load document
             const contentDiv = modal.querySelector('div[style*="overflow-y: auto"]');
             try {
-                const response = await fetchData(`${API_BASE}/cosmos/${containerId}/document/${documentId}`);
+                const response = await fetchData(`${API_BASE}/cosmos/containers/${containerId}/documents/${documentId}`);
                 if (response && response.document) {
                     const doc = response.document;
                     
@@ -2402,7 +2402,7 @@
         // Helper functions for document actions
         async function copyDocumentToClipboard(containerId, documentId) {
             try {
-                const response = await fetchData(`${API_BASE}/cosmos/${containerId}/document/${documentId}`);
+                const response = await fetchData(`${API_BASE}/cosmos/containers/${containerId}/documents/${documentId}`);
                 if (response && response.document) {
                     navigator.clipboard.writeText(JSON.stringify(response.document, null, 2));
                     showToast('Document copied to clipboard', 'success');
