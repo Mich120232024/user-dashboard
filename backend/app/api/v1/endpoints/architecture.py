@@ -13,8 +13,9 @@ router = APIRouter()
 
 # Define where architecture files are stored
 ARCHITECTURE_BASE_PATHS = [
-    "/Users/mikaeleage/Research & Analytics Services/System Enforcement Workspace/documentation",
-    "/Users/mikaeleage/Research & Analytics Services/Engineering Workspace/docs",
+    "/Users/mikaeleage/Research & Analytics Services/System Enforcement Workspace/DOCS/documentation",
+    "/Users/mikaeleage/Research & Analytics Services/System Enforcement Workspace/docs",
+    "/Users/mikaeleage/Research & Analytics Services/Engineering Workspace/documentation",
     "/Users/mikaeleage/Research & Analytics Services/Engineering Workspace/Projects/user-dashboard-clean/docs"
 ]
 
