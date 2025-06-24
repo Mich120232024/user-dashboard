@@ -127,7 +127,7 @@
         /* Cards */
         .card {
             background: var(--bg-card);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 16px;
@@ -155,7 +155,7 @@
 
         .stat-card {
             background: var(--bg-card);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
         }
@@ -177,7 +177,7 @@
         /* Lists */
         .list-container {
             background: var(--bg-card);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             height: calc(100% - 100px);
             overflow: hidden;
@@ -187,7 +187,7 @@
 
         .list-header {
             padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -200,7 +200,7 @@
 
         .list-item {
             padding: 12px 20px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -211,7 +211,7 @@
 
         .list-item.active {
             background: var(--bg-hover);
-            border-left: 3px solid var(--accent);
+            border-left: 3px solid var(--accent-blue);
         }
 
         /* Buttons */
@@ -227,18 +227,18 @@
         }
 
         .btn-primary {
-            background: var(--accent);
+            background: var(--accent-blue);
             color: white;
         }
 
         .btn-primary:hover {
-            background: var(--accent-hover);
+            background: var(--primary-blue);
         }
 
         .btn-secondary {
             background: transparent;
             color: var(--text-secondary);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
         }
 
         .btn-secondary:hover {
@@ -275,8 +275,8 @@
 
         /* Code/JSON Display */
         .code-block {
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 16px;
             font-family: var(--font-mono);
@@ -292,16 +292,301 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
+            background: var(--bg-dark);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border);
+            background: var(--border-color);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
+        }
+
+        /* Architecture Tab Styles */
+        .architecture-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .architecture-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .architecture-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .architecture-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 16px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .file-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 0 8px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .file-category {
+            margin-bottom: 16px;
+        }
+
+        .category-header {
+            font-weight: 600;
+            color: var(--accent-cyan);
+            padding: 8px 12px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-header:hover {
+            background: rgba(6, 182, 212, 0.2);
+        }
+
+        .file-item {
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .file-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-color);
+        }
+
+        .file-item.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .file-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .file-item-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .file-viewer {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 8px 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        #architecture-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: white;
+        }
+
+        .refresh-icon {
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+
+        .btn:hover .refresh-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Documentation Tab Styles */
+        .documentation-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .documentation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .documentation-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            width: 200px;
+        }
+
+        .documentation-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 16px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .doc-categories {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 0 8px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .doc-category {
+            margin-bottom: 16px;
+        }
+
+        .doc-category-header {
+            font-weight: 600;
+            color: var(--accent-blue);
+            padding: 10px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .doc-category-header:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .doc-category.collapsed .doc-category-items {
+            display: none;
+        }
+
+        .doc-item {
+            padding: 10px 12px;
+            margin: 4px 0 4px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            font-size: 13px;
+        }
+
+        .doc-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-color);
+        }
+
+        .doc-item.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .doc-viewer {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 8px 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .viewer-placeholder {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .doc-content {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .doc-header {
+            padding: 16px 24px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .doc-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .doc-meta {
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
         }
     </style>
 </head>
@@ -322,7 +607,7 @@
         <div class="nav-item" data-tab="agents">Agent Shell</div>
         <div class="nav-item" data-tab="manager">Manager</div>
         <div class="nav-item" data-tab="workspace">Workspace</div>
-        <div class="nav-item" data-tab="research">Research Viz</div>
+        <div class="nav-item" data-tab="research">Architecture</div>
         <div class="nav-item" data-tab="documentation">Documentation</div>
         <div class="nav-item" data-tab="deepcontext">Deep Context</div>
     </nav>
@@ -501,20 +786,58 @@
 
         <!-- Research Tab -->
         <div class="tab-content" id="research">
-            <div class="card">
-                <h3>Research Visualization</h3>
-                <div id="research-content">
-                    <div class="empty-state">Research visualization loading...</div>
+            <div class="architecture-container">
+                <div class="architecture-header">
+                    <h3>Architecture Documentation</h3>
+                    <div class="architecture-controls">
+                        <select id="category-filter" class="filter-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="refreshArchitecture()">
+                            <span class="refresh-icon">↻</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="architecture-layout">
+                    <div class="file-list" id="architecture-files">
+                        <div class="loading">Loading architecture files...</div>
+                    </div>
+                    <div class="file-viewer" id="architecture-viewer">
+                        <div class="viewer-header">
+                            <span id="viewer-title">Select a file to view</span>
+                            <div class="viewer-controls">
+                                <button class="btn btn-sm" onclick="openInNewTab()" title="Open in new tab">↗</button>
+                                <button class="btn btn-sm" onclick="downloadFile()" title="Download">↓</button>
+                            </div>
+                        </div>
+                        <iframe id="architecture-iframe" src="about:blank"></iframe>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Documentation Tab -->
         <div class="tab-content" id="documentation">
-            <div class="card">
-                <h3>Documentation Library</h3>
-                <div id="documentation-content">
-                    <div class="empty-state">Documentation system loading...</div>
+            <div class="documentation-container">
+                <div class="documentation-header">
+                    <h3>Documentation Library</h3>
+                    <div class="documentation-controls">
+                        <input type="text" id="doc-search" placeholder="Search documentation..." class="search-input">
+                        <select id="doc-category-filter" class="filter-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="uploadDocument()">Upload</button>
+                    </div>
+                </div>
+                <div class="documentation-layout">
+                    <div class="doc-categories" id="doc-categories">
+                        <div class="loading">Loading documentation...</div>
+                    </div>
+                    <div class="doc-viewer" id="doc-viewer">
+                        <div class="viewer-placeholder">
+                            <div class="empty-state">Select a document to view</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2141,73 +2464,37 @@
         }
         
         async function loadResearch() {
-            const content = document.getElementById('research-content');
-            content.innerHTML = '<div class="loading">Loading research visualization...</div>';
-            
-            setTimeout(() => {
-                content.innerHTML = '<div class="empty-state">Research visualization coming soon</div>';
-            }, 500);
+            console.log('loadResearch function called');
+            // Load architecture files when research tab is clicked
+            loadArchitecture();
         }
         
         async function loadDocumentation() {
-            const content = document.getElementById('documentation-content');
-            content.innerHTML = '<div class="loading">Loading documentation library...</div>';
+            console.log('loadDocumentation called');
+            const categoriesDiv = document.getElementById('doc-categories');
+            
+            if (!categoriesDiv) {
+                console.error('doc-categories element not found');
+                return;
+            }
+            
+            categoriesDiv.innerHTML = '<div class="loading">Loading documentation library...</div>';
             
             try {
                 const response = await fetch(`${API_BASE}/docs/structure`);
                 const structure = await response.json();
                 
                 if (structure && structure.categories) {
-                    displayDocumentationStructure(content, structure);
+                    displayDocumentationCategories(structure);
                 } else {
-                    content.innerHTML = '<div class="empty-state">Documentation system temporarily unavailable</div>';
+                    categoriesDiv.innerHTML = '<div class="empty-state">Documentation system temporarily unavailable</div>';
                 }
             } catch (error) {
                 console.error('Documentation error:', error);
-                content.innerHTML = '<div class="empty-state">Failed to load documentation</div>';
+                categoriesDiv.innerHTML = '<div class="empty-state">Failed to load documentation</div>';
             }
         }
         
-        function displayDocumentationStructure(container, structure) {
-            container.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="margin-bottom: 20px;">
-                        <input type="text" placeholder="Search documentation..." 
-                               style="width: 100%; padding: 8px; background: var(--bg-dark); 
-                                      color: var(--text-primary); border: 1px solid var(--border-color); 
-                                      border-radius: 4px;">
-                    </div>
-                    <div id="doc-categories">
-                        ${structure.categories.map(cat => `
-                            <div class="card" style="margin-bottom: 10px;">
-                                <h4 style="cursor: pointer;" onclick="toggleDocCategory('${cat.id}')">
-                                    ${cat.name} (${cat.documents ? cat.documents.length : 0})
-                                </h4>
-                                <div id="doc-cat-${cat.id}" style="display: none; margin-top: 10px;">
-                                    ${cat.documents ? cat.documents.map(doc => `
-                                        <div style="padding: 8px; cursor: pointer; border-radius: 4px;"
-                                             onmouseover="this.style.backgroundColor='var(--bg-hover)'"
-                                             onmouseout="this.style.backgroundColor='transparent'"
-                                             onclick="viewDocument('${doc.id}')">
-                                            📄 ${doc.title}
-                                        </div>
-                                    `).join('') : '<div style="color: var(--text-muted);">No documents</div>'}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-        
-        function toggleDocCategory(catId) {
-            const element = document.getElementById(`doc-cat-${catId}`);
-            element.style.display = element.style.display === 'none' ? 'block' : 'none';
-        }
-        
-        function viewDocument(docId) {
-            showToast(`Viewing document ${docId}`, 'info');
-        }
         
         // Deep Context Management Functions
         let selectedDeepContextAgent = null;
@@ -2410,7 +2697,355 @@
         window.copyDocumentToClipboard = copyDocumentToClipboard;
         window.editCosmosDocument = editCosmosDocument;
         window.deleteCosmosDocument = deleteCosmosDocument;
+        window.refreshArchitecture = refreshArchitecture;
+        window.openInNewTab = openInNewTab;
+        window.downloadFile = downloadFile;
+        window.uploadDocument = uploadDocument;
+        window.downloadDocument = downloadDocument;
+        window.shareDocument = shareDocument;
         
+        // Architecture Tab Functions
+        let architectureFiles = [];
+        let selectedArchFile = null;
+
+        async function loadArchitecture() {
+            console.log('loadArchitecture called');
+            const fileList = document.getElementById('architecture-files');
+            const categoryFilter = document.getElementById('category-filter');
+            
+            if (!fileList) {
+                console.error('architecture-files element not found');
+                return;
+            }
+            
+            try {
+                fileList.innerHTML = '<div class="loading">Loading architecture files...</div>';
+                
+                console.log('Fetching:', `${API_BASE}/architecture/list`);
+                const response = await fetch(`${API_BASE}/architecture/list`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                console.log('Architecture data received:', data);
+                architectureFiles = data.files || [];
+                console.log('Files count:', architectureFiles.length);
+                
+                // Group files by category
+                const categories = {};
+                architectureFiles.forEach(file => {
+                    if (!categories[file.category]) {
+                        categories[file.category] = [];
+                    }
+                    categories[file.category].push(file);
+                });
+                console.log('Categories:', Object.keys(categories));
+                
+                // Update category filter
+                const uniqueCategories = Object.keys(categories).sort();
+                categoryFilter.innerHTML = '<option value="">All Categories</option>';
+                uniqueCategories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat + ` (${categories[cat].length})`;
+                    categoryFilter.appendChild(option);
+                });
+                
+                // Display files
+                displayArchitectureFiles(categories);
+                
+            } catch (error) {
+                console.error('Failed to load architecture:', error);
+                console.error('Error details:', error.message, error.stack);
+                fileList.innerHTML = '<div class="empty-state">Failed to load architecture files: ' + error.message + '</div>';
+            }
+        }
+
+        function displayArchitectureFiles(categories) {
+            const fileList = document.getElementById('architecture-files');
+            const selectedCategory = document.getElementById('category-filter').value;
+            
+            fileList.innerHTML = '';
+            
+            Object.entries(categories).forEach(([category, files]) => {
+                if (selectedCategory && category !== selectedCategory) return;
+                
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'file-category';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `
+                    <span>${category}</span>
+                    <span>${files.length} files</span>
+                `;
+                
+                categoryDiv.appendChild(header);
+                
+                files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.onclick = function() { selectArchFile(file, this); };
+                    
+                    fileItem.innerHTML = `
+                        <div class="file-item-name">${file.display_name}</div>
+                        <div class="file-item-meta">${file.size}</div>
+                    `;
+                    
+                    categoryDiv.appendChild(fileItem);
+                });
+                
+                fileList.appendChild(categoryDiv);
+            });
+        }
+
+        function selectArchFile(file, element) {
+            selectedArchFile = file;
+            
+            // Update active state
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            }
+            
+            // Update viewer
+            document.getElementById('viewer-title').textContent = file.display_name;
+            const iframe = document.getElementById('architecture-iframe');
+            iframe.src = `${API_BASE}/architecture/raw?path=${encodeURIComponent(file.path)}`;
+        }
+
+        function refreshArchitecture() {
+            loadArchitecture();
+        }
+
+        function openInNewTab() {
+            if (selectedArchFile) {
+                window.open(`${API_BASE}/architecture/raw?path=${encodeURIComponent(selectedArchFile.path)}`, '_blank');
+            }
+        }
+
+        function downloadFile() {
+            if (selectedArchFile) {
+                window.location.href = `${API_BASE}/architecture/download?path=${encodeURIComponent(selectedArchFile.path)}`;
+            }
+        }
+
+        // Update category filter handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryFilter = document.getElementById('category-filter');
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', () => {
+                    const categories = {};
+                    architectureFiles.forEach(file => {
+                        if (!categories[file.category]) {
+                            categories[file.category] = [];
+                        }
+                        categories[file.category].push(file);
+                    });
+                    displayArchitectureFiles(categories);
+                });
+            }
+        });
+
+        // Documentation Tab Functions
+        let documentationStructure = null;
+        let selectedDoc = null;
+
+        function displayDocumentationCategories(structure) {
+            documentationStructure = structure;
+            const categoriesDiv = document.getElementById('doc-categories');
+            const categoryFilter = document.getElementById('doc-category-filter');
+            
+            // Update category filter
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            structure.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categoryFilter.appendChild(option);
+            });
+            
+            // Display categories
+            categoriesDiv.innerHTML = '';
+            structure.categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'doc-category';
+                categoryDiv.dataset.categoryId = category.id;
+                
+                const header = document.createElement('div');
+                header.className = 'doc-category-header';
+                header.onclick = () => toggleCategory(categoryDiv);
+                
+                // Count total documents in category and subcategories
+                let docCount = 0;
+                if (category.documents) docCount += category.documents.length;
+                if (category.subcategories) {
+                    category.subcategories.forEach(sub => {
+                        if (sub.documents) docCount += sub.documents.length;
+                    });
+                }
+                
+                header.innerHTML = `
+                    <span>${category.icon || ''} ${category.name}</span>
+                    <span>${docCount} docs</span>
+                `;
+                
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'doc-category-items';
+                
+                // Add documents directly in category
+                if (category.documents) {
+                    category.documents.forEach(doc => {
+                        const docItem = document.createElement('div');
+                        docItem.className = 'doc-item';
+                        docItem.onclick = function() { selectDocument(doc, this); };
+                        docItem.textContent = doc.name || doc.title;
+                        itemsDiv.appendChild(docItem);
+                    });
+                }
+                
+                // Add subcategory documents
+                if (category.subcategories) {
+                    category.subcategories.forEach(sub => {
+                        if (sub.documents && sub.documents.length > 0) {
+                            const subHeader = document.createElement('div');
+                            subHeader.style.cssText = 'font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 8px 0 4px 12px;';
+                            subHeader.textContent = sub.name;
+                            itemsDiv.appendChild(subHeader);
+                            
+                            sub.documents.forEach(doc => {
+                                const docItem = document.createElement('div');
+                                docItem.className = 'doc-item';
+                                docItem.onclick = function() { selectDocument(doc, this); };
+                                docItem.textContent = doc.name || doc.title;
+                                itemsDiv.appendChild(docItem);
+                            });
+                        }
+                    });
+                }
+                
+                categoryDiv.appendChild(header);
+                categoryDiv.appendChild(itemsDiv);
+                categoriesDiv.appendChild(categoryDiv);
+            });
+        }
+
+        function toggleCategory(categoryDiv) {
+            categoryDiv.classList.toggle('collapsed');
+        }
+
+        async function selectDocument(doc, element) {
+            selectedDoc = doc;
+            
+            // Update active state
+            document.querySelectorAll('.doc-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            }
+            
+            // Load document content
+            const viewer = document.getElementById('doc-viewer');
+            viewer.innerHTML = '<div class="loading">Loading document...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/docs/${doc.id}`);
+                const docData = await response.json();
+                
+                viewer.innerHTML = `
+                    <div class="doc-header">
+                        <div class="doc-title">${docData.title}</div>
+                        <div class="doc-meta">
+                            <span>Category: ${docData.category}</span>
+                            <span>Owner: ${docData.owner}</span>
+                            <span>Updated: ${new Date(docData.updated_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="btn btn-secondary" onclick="downloadDocument('${doc.id}')">Download</button>
+                            <button class="btn btn-secondary" onclick="shareDocument('${doc.id}')">Share</button>
+                        </div>
+                    </div>
+                    <div class="doc-content">
+                        ${docData.content}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load document:', error);
+                viewer.innerHTML = '<div class="empty-state">Failed to load document</div>';
+            }
+        }
+
+        function uploadDocument() {
+            alert('Document upload functionality coming soon');
+        }
+
+        function downloadDocument(docId) {
+            window.open(`${API_BASE}/docs/${docId}/download`, '_blank');
+        }
+
+        function shareDocument(docId) {
+            const url = `${window.location.origin}/docs/${docId}`;
+            navigator.clipboard.writeText(url);
+            alert('Document link copied to clipboard');
+        }
+
+        // Documentation search and filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('doc-search');
+            const categoryFilter = document.getElementById('doc-category-filter');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', filterDocumentation);
+            }
+            
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', filterDocumentation);
+            }
+        });
+
+        function filterDocumentation() {
+            const searchTerm = document.getElementById('doc-search').value.toLowerCase();
+            const selectedCategory = document.getElementById('doc-category-filter').value;
+            
+            document.querySelectorAll('.doc-category').forEach(categoryDiv => {
+                const categoryId = categoryDiv.dataset.categoryId;
+                const shouldShowCategory = !selectedCategory || categoryId === selectedCategory;
+                
+                if (shouldShowCategory) {
+                    categoryDiv.style.display = 'block';
+                    
+                    // Filter documents within category
+                    const docItems = categoryDiv.querySelectorAll('.doc-item');
+                    let visibleCount = 0;
+                    
+                    docItems.forEach(item => {
+                        const docTitle = item.textContent.toLowerCase();
+                        if (docTitle.includes(searchTerm)) {
+                            item.style.display = 'block';
+                            visibleCount++;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    // Hide category if no visible documents
+                    if (visibleCount === 0 && searchTerm) {
+                        categoryDiv.style.display = 'none';
+                    }
+                } else {
+                    categoryDiv.style.display = 'none';
+                }
+            });
+        }
+
+        // Main initialization function
+        function initialize() {
+            console.log('initialize() called');
+            // The DOMContentLoaded event will handle the actual setup
+        }
+
         // Initialize on load
         initialize();
     </script>
