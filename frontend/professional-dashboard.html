@@ -2037,28 +2037,39 @@
             const container = document.getElementById('graph-container');
             container.innerHTML = '<div class="loading">Loading graph data...</div>';
             
-            // First try to get agent context memory nodes
-            const contextResponse = await fetchData(`${API_BASE}/cosmos/containers/agent_context_memory/documents?limit=50`);
-            
-            if (contextResponse && contextResponse.documents && contextResponse.documents.length > 0) {
-                // Build graph from context memory
-                const graphData = buildGraphFromContextMemory(contextResponse.documents);
-                initializeCytoscape(container, graphData);
-            } else {
-                // Fall back to regular graph endpoint
-                const response = await fetchData(`${API_BASE}/graph/graph?max_nodes=100`);
-            if (response && response.success && response.graph) {
-                const graphData = response.graph;
+            try {
+                // First try to get agent context memory nodes
+                console.log('Loading graph data from agent context memory...');
+                const contextResponse = await fetchData(`${API_BASE}/cosmos/containers/agent_context_memory/documents?limit=50`);
                 
-                // Initialize Cytoscape with actual data
-                if (graphData.nodes && graphData.nodes.length > 0) {
+                if (contextResponse && contextResponse.documents && contextResponse.documents.length > 0) {
+                    console.log(`Found ${contextResponse.documents.length} documents for graph`);
+                    // Build graph from context memory
+                    const graphData = buildGraphFromContextMemory(contextResponse.documents);
+                    console.log(`Built graph data: ${graphData.nodes.length} nodes, ${graphData.edges.length} edges`);
                     initializeCytoscape(container, graphData);
-                } else {
-                    container.innerHTML = '<div class="empty-state">No graph data available</div>';
+                    return;
                 }
-            } else {
-                container.innerHTML = '<div class="empty-state">Failed to load graph data</div>';
-            }
+                
+                // Fall back to regular graph endpoint
+                console.log('Falling back to graph API endpoint...');
+                const response = await fetchData(`${API_BASE}/graph/graph?max_nodes=100`);
+                if (response && response.success && response.graph) {
+                    const graphData = response.graph;
+                    console.log(`Graph API returned: ${graphData.nodes?.length || 0} nodes, ${graphData.edges?.length || 0} edges`);
+                    
+                    // Initialize Cytoscape with actual data
+                    if (graphData.nodes && graphData.nodes.length > 0) {
+                        initializeCytoscape(container, graphData);
+                    } else {
+                        container.innerHTML = '<div class="empty-state">No graph data available</div>';
+                    }
+                } else {
+                    container.innerHTML = '<div class="empty-state">Failed to load graph data</div>';
+                }
+            } catch (error) {
+                console.error('Graph loading error:', error);
+                container.innerHTML = `<div class="error">Error loading graph: ${error.message}</div>`;
             }
         }
         
