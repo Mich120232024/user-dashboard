@@ -844,13 +844,53 @@
 
         <!-- Graph Tab -->
         <div class="tab-content" id="graph">
-            <div class="card" style="height: 100%;">
-                <div class="card-header">
-                    <h3>Relationship Graph</h3>
-                    <button class="btn btn-primary" onclick="loadGraph()">Load Graph</button>
+            <div style="display: flex; flex-direction: column; height: 100%;">
+                <!-- Graph Controls Panel -->
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="card-header">
+                        <h3>Graph Controls</h3>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <input type="text" id="graph-search" placeholder="Search nodes..." 
+                                   style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--surface-1); color: var(--text-primary); width: 200px;">
+                            
+                            <select id="node-type-filter" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--surface-1); color: var(--text-primary);">
+                                <option value="">All Node Types</option>
+                                <option value="agent">Agents</option>
+                                <option value="session">Sessions</option>
+                                <option value="message">Messages</option>
+                                <option value="context">Contexts</option>
+                                <option value="memory">Memory</option>
+                                <option value="document">Documents</option>
+                            </select>
+                            
+                            <select id="graph-layout" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--surface-1); color: var(--text-primary);">
+                                <option value="breadthfirst">Hierarchy</option>
+                                <option value="circle">Circle</option>
+                                <option value="grid">Grid</option>
+                                <option value="random">Random</option>
+                                <option value="cose">Force-Directed</option>
+                            </select>
+                            
+                            <input type="range" id="max-nodes" min="10" max="200" value="50" 
+                                   style="width: 100px;" title="Max Nodes">
+                            <span id="max-nodes-display" style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">50 nodes</span>
+                            
+                            <button class="btn btn-primary" onclick="loadGraphWithFilters()">Load Graph</button>
+                            <button class="btn btn-secondary" onclick="loadHierarchy()">Hierarchy</button>
+                            <button class="btn btn-secondary" onclick="getGraphStats()">Stats</button>
+                        </div>
+                    </div>
                 </div>
-                <div id="graph-container" style="height: calc(100% - 60px);">
-                    <div class="empty-state">Click "Load Graph" to visualize relationships</div>
+                
+                <!-- Graph Visualization -->
+                <div class="card" style="flex: 1; min-height: 0;">
+                    <div class="card-header">
+                        <h3>Relationship Graph</h3>
+                        <div id="graph-info" style="font-size: 12px; color: var(--text-secondary);"></div>
+                    </div>
+                    <div id="graph-container" style="height: calc(100% - 60px);">
+                        <div class="empty-state">Configure filters and click "Load Graph" to visualize relationships</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1027,6 +1067,7 @@
             try {
                 setupNavigation();
                 loadOverview();
+                initializeGraphControls();
                 console.log('Initialization complete');
             } catch (error) {
                 console.error('Initialization error:', error);
@@ -2119,30 +2160,204 @@
             return date.toLocaleDateString();
         }
         
-        // Graph
-        async function loadGraph() {
+        // Graph controls initialization
+        function initializeGraphControls() {
+            // Max nodes slider
+            const maxNodesSlider = document.getElementById('max-nodes');
+            const maxNodesDisplay = document.getElementById('max-nodes-display');
+            
+            if (maxNodesSlider && maxNodesDisplay) {
+                maxNodesSlider.addEventListener('input', (e) => {
+                    maxNodesDisplay.textContent = `${e.target.value} nodes`;
+                });
+            }
+        }
+
+        // Load hierarchy (simple organizational structure)
+        async function loadHierarchy() {
             const container = document.getElementById('graph-container');
-            container.innerHTML = '<div class="loading">Loading graph data...</div>';
+            container.innerHTML = '<div class="loading">Loading hierarchy...</div>';
             
             try {
-                // Skip agent context memory and go directly to hierarchy data
-                console.log('Loading graph data from hierarchy endpoint...');
-                
-                // Fall back to simple graph data endpoint (pre-defined hierarchy)
-                console.log('Falling back to graph data endpoint...');
                 const response = await fetchData(`${API_BASE}/graph/data`);
                 if (response && response.nodes && response.edges) {
-                    console.log(`Graph data returned: ${response.nodes.length} nodes, ${response.edges.length} edges`);
+                    console.log(`Hierarchy loaded: ${response.nodes.length} nodes, ${response.edges.length} edges`);
+                    
+                    // Update graph info
+                    updateGraphInfo({
+                        nodes: response.nodes.length,
+                        edges: response.edges.length,
+                        type: 'Organizational Hierarchy'
+                    });
                     
                     // Data is already in cytoscape format, initialize directly
                     initializeCytoscapeDirectly(container, response.nodes, response.edges);
                 } else {
-                    container.innerHTML = '<div class="empty-state">Failed to load graph data</div>';
+                    container.innerHTML = '<div class="empty-state">Failed to load hierarchy data</div>';
+                }
+            } catch (error) {
+                console.error('Hierarchy loading error:', error);
+                container.innerHTML = `<div class="error">Error loading hierarchy: ${error.message}</div>`;
+            }
+        }
+
+        // Load graph with filters and search
+        async function loadGraphWithFilters() {
+            const container = document.getElementById('graph-container');
+            container.innerHTML = '<div class="loading">Loading filtered graph...</div>';
+            
+            try {
+                const searchTerm = document.getElementById('graph-search').value.trim();
+                const nodeType = document.getElementById('node-type-filter').value;
+                const maxNodes = document.getElementById('max-nodes').value;
+                
+                let url = `${API_BASE}/graph/graph?max_nodes=${maxNodes}`;
+                
+                // If we have search term, use search endpoint
+                if (searchTerm) {
+                    url = `${API_BASE}/graph/search?q=${encodeURIComponent(searchTerm)}&max_results=${maxNodes}`;
+                    
+                    const response = await fetchData(url);
+                    if (response && response.success && response.nodes) {
+                        console.log(`Search results: ${response.nodes.length} nodes, ${response.edges.length} edges`);
+                        
+                        updateGraphInfo({
+                            nodes: response.nodes.length,
+                            edges: response.edges.length,
+                            type: `Search: "${searchTerm}"`,
+                            searchResults: response.counts?.search_results || 0
+                        });
+                        
+                        // Convert to our graph format
+                        const graphData = {
+                            nodes: response.nodes,
+                            edges: response.edges
+                        };
+                        initializeCytoscape(container, graphData);
+                        return;
+                    }
+                }
+                
+                // Otherwise use regular graph endpoint with filters
+                if (nodeType) {
+                    url += `&node_type=${nodeType}`;
+                }
+                
+                const response = await fetchData(url);
+                if (response && response.success && response.graph) {
+                    const graphData = response.graph;
+                    console.log(`Filtered graph: ${graphData.nodes?.length || 0} nodes, ${graphData.edges?.length || 0} edges`);
+                    
+                    updateGraphInfo({
+                        nodes: graphData.nodes?.length || 0,
+                        edges: graphData.edges?.length || 0,
+                        type: nodeType ? `Filtered: ${nodeType}` : 'Full Graph',
+                        metadata: graphData.metadata
+                    });
+                    
+                    if (graphData.nodes && graphData.nodes.length > 0) {
+                        initializeCytoscape(container, graphData);
+                    } else {
+                        container.innerHTML = '<div class="empty-state">No nodes found with current filters</div>';
+                    }
+                } else {
+                    // Fallback to hierarchy if no results
+                    console.log('No filtered results, falling back to hierarchy');
+                    loadHierarchy();
                 }
             } catch (error) {
                 console.error('Graph loading error:', error);
                 container.innerHTML = `<div class="error">Error loading graph: ${error.message}</div>`;
             }
+        }
+
+        // Get graph statistics
+        async function getGraphStats() {
+            try {
+                const response = await fetchData(`${API_BASE}/graph/stats`);
+                if (response && response.success) {
+                    const stats = response.stats;
+                    
+                    // Create stats modal
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-content" style="width: 500px;">
+                            <div class="modal-header">
+                                <h3>Graph Statistics</h3>
+                                <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                            </div>
+                            <div style="padding: 20px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div class="stat-item">
+                                        <div style="font-size: 24px; font-weight: bold; color: var(--primary-blue);">${stats.total_nodes}</div>
+                                        <div style="color: var(--text-secondary);">Total Nodes</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div style="font-size: 24px; font-weight: bold; color: var(--success-green);">${stats.total_edges}</div>
+                                        <div style="color: var(--text-secondary);">Total Edges</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div style="font-size: 18px; font-weight: bold; color: var(--accent-cyan);">${stats.density}</div>
+                                        <div style="color: var(--text-secondary);">Graph Density</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div style="font-size: 18px; font-weight: bold; color: var(--warning-amber);">${stats.average_connections}</div>
+                                        <div style="color: var(--text-secondary);">Avg Connections</div>
+                                    </div>
+                                </div>
+                                
+                                <h4 style="margin: 20px 0 10px 0;">Node Types</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                    ${Object.entries(stats.node_types).map(([type, count]) => 
+                                        `<span class="badge" style="background: var(--surface-2); padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                            ${type}: ${count}
+                                        </span>`
+                                    ).join('')}
+                                </div>
+                                
+                                <h4 style="margin: 20px 0 10px 0;">Most Connected Nodes</h4>
+                                <div style="max-height: 150px; overflow-y: auto;">
+                                    ${stats.most_connected_nodes.slice(0, 10).map(([nodeId, connections]) => 
+                                        `<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color);">
+                                            <span style="color: var(--text-primary);">${nodeId}</span>
+                                            <span style="color: var(--text-secondary);">${connections} connections</span>
+                                        </div>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    showToast('Graph statistics loaded', 'success');
+                } else {
+                    showToast('Failed to load graph statistics', 'error');
+                }
+            } catch (error) {
+                console.error('Stats loading error:', error);
+                showToast(`Error loading stats: ${error.message}`, 'error');
+            }
+        }
+
+        // Update graph info display
+        function updateGraphInfo(info) {
+            const graphInfo = document.getElementById('graph-info');
+            if (graphInfo) {
+                let text = `${info.nodes} nodes, ${info.edges} edges`;
+                if (info.type) {
+                    text = `${info.type} - ${text}`;
+                }
+                if (info.searchResults !== undefined) {
+                    text += ` (${info.searchResults} search results)`;
+                }
+                graphInfo.textContent = text;
+            }
+        }
+
+        // Legacy function for compatibility
+        async function loadGraph() {
+            loadHierarchy();
         }
         
         // Initialize Cytoscape with pre-formatted data  
@@ -2213,7 +2428,7 @@
                     }
                 ],
                 layout: {
-                    name: 'breadthfirst',
+                    name: document.getElementById('graph-layout')?.value || 'breadthfirst',
                     directed: true,
                     spacingFactor: 1.5,
                     animate: true,
