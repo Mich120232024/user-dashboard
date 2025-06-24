@@ -2816,6 +2816,7 @@
         }
 
         function selectArchFile(file, element) {
+            console.log('selectArchFile called with:', file.display_name);
             selectedArchFile = file;
             
             // Update active state
@@ -2827,9 +2828,23 @@
             }
             
             // Update viewer
-            document.getElementById('viewer-title').textContent = file.display_name;
+            const viewerTitle = document.getElementById('viewer-title');
             const iframe = document.getElementById('architecture-iframe');
-            iframe.src = `${API_BASE}/architecture/raw?path=${encodeURIComponent(file.path)}`;
+            
+            console.log('viewer-title element:', viewerTitle);
+            console.log('architecture-iframe element:', iframe);
+            
+            if (viewerTitle) {
+                viewerTitle.textContent = file.display_name;
+            }
+            
+            if (iframe) {
+                const url = `${API_BASE}/architecture/raw?path=${encodeURIComponent(file.path)}`;
+                console.log('Loading iframe URL:', url);
+                iframe.src = url;
+            } else {
+                console.error('Could not find architecture-iframe element!');
+            }
         }
 
         function refreshArchitecture() {
