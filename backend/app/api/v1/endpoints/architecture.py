@@ -215,10 +215,13 @@ async def get_architecture_raw(path: str = Query(..., description="Full path to 
         if not allowed:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        return FileResponse(
-            path=str(file_path),
-            media_type="text/html",
-            filename=file_path.name
+        # Read file content and return as HTMLResponse for iframe display
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        return HTMLResponse(
+            content=content,
+            media_type="text/html"
         )
         
     except HTTPException:
