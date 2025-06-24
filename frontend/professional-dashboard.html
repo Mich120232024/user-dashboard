@@ -1475,12 +1475,26 @@
             
             document.body.appendChild(modal);
             window.currentModal = modal;
+            
+            // Add escape key handler
+            const messageEscapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    closeMessageViewer();
+                }
+            };
+            document.addEventListener('keydown', messageEscapeHandler);
+            window.messageEscapeHandler = messageEscapeHandler;
         }
         
         function closeMessageViewer() {
             if (window.currentModal) {
                 document.body.removeChild(window.currentModal);
                 window.currentModal = null;
+                // Remove escape handler
+                if (window.messageEscapeHandler) {
+                    document.removeEventListener('keydown', window.messageEscapeHandler);
+                    window.messageEscapeHandler = null;
+                }
             }
         }
         
@@ -2019,11 +2033,26 @@
         async function viewCosmosDocument(containerId, documentId) {
             // Create modal
             const modal = document.createElement('div');
+            modal.className = 'cosmos-modal';
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0, 0, 0, 0.8); z-index: 10000;
                 display: flex; align-items: center; justify-content: center;
             `;
+            
+            // Close function
+            const closeModal = () => {
+                modal.remove();
+                document.removeEventListener('keydown', escapeHandler);
+            };
+            
+            // Escape key handler
+            const escapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
             
             modal.innerHTML = `
                 <div style="background: var(--bg-card); border-radius: 8px; width: 90%; max-width: 900px; height: 80vh; 
@@ -2035,7 +2064,7 @@
                                 Container: ${containerId} | ID: ${documentId}
                             </div>
                         </div>
-                        <button onclick="this.closest('div[style*='position: fixed']').remove()" 
+                        <button onclick="document.querySelector('.cosmos-modal').remove(); document.removeEventListener('keydown', window.cosmosEscapeHandler)" 
                                 style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
                     </div>
                     <div style="flex: 1; overflow-y: auto; padding: 20px;">
@@ -2049,11 +2078,14 @@
                             <button class="btn btn-secondary" onclick="copyDocumentToClipboard('${containerId}', '${documentId}')">📋 Copy</button>
                             <button class="btn btn-secondary" onclick="editCosmosDocument('${containerId}', '${documentId}')">✏️ Edit</button>
                             <button class="btn btn-secondary" onclick="deleteCosmosDocument('${containerId}', '${documentId}')">🗑️ Delete</button>
-                            <button class="btn btn-secondary" onclick="this.closest('div[style*='position: fixed']').remove()">Close</button>
+                            <button class="btn btn-secondary" onclick="document.querySelector('.cosmos-modal').remove(); document.removeEventListener('keydown', window.cosmosEscapeHandler)">Close</button>
                         </div>
                     </div>
                 </div>
             `;
+            
+            // Store escape handler for removal
+            window.cosmosEscapeHandler = escapeHandler;
             
             document.body.appendChild(modal);
             
@@ -2142,51 +2174,43 @@
         
         async function loadResearch() {
             const content = document.getElementById('research-content');
-            content.innerHTML = '<div class="loading">Loading architecture files...</div>';
+            content.innerHTML = '<div class="loading">Loading research slides...</div>';
             
             try {
                 const response = await fetch(`${API_BASE}/architecture/list`);
                 const data = await response.json();
                 
                 if (data.files && data.files.length > 0) {
-                    // Group files by category
-                    const categories = {};
-                    data.files.forEach(file => {
-                        const category = file.category || 'General';
-                        if (!categories[category]) {
-                            categories[category] = [];
-                        }
-                        categories[category].push(file);
-                    });
-                    
+                    // Show first slide in iframe
+                    const firstFile = data.files[0];
                     content.innerHTML = `
-                        <div style="padding: 20px; height: 100%; display: flex; flex-direction: column;">
-                            <h3 style="margin-bottom: 20px;">Architecture Documentation</h3>
-                            <div style="flex: 1; overflow-y: auto;">
-                                ${Object.entries(categories).map(([category, files]) => `
-                                    <div class="card" style="margin-bottom: 20px;">
-                                        <h4 style="margin-bottom: 10px; color: var(--accent-blue);">${category}</h4>
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
-                                            ${files.map(file => `
-                                                <div class="selectable-item" onclick="viewArchitectureFile('${file.path}')" 
-                                                     style="padding: 10px; cursor: pointer; border: 1px solid var(--border-color); 
-                                                            border-radius: 4px; background: var(--bg-dark);">
-                                                    <div style="font-weight: 500;">${file.display_name}</div>
-                                                    <div style="font-size: 0.9em; color: var(--text-secondary);">${file.size}</div>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                `).join('')}
+                        <div style="height: 100%; display: flex; flex-direction: column;">
+                            <div style="padding: 10px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <select id="slide-selector" onchange="changeSlide()" 
+                                            style="padding: 8px; background: var(--bg-dark); color: var(--text-primary); 
+                                                   border: 1px solid var(--border-color); border-radius: 4px;">
+                                        ${data.files.map((file, index) => 
+                                            `<option value="${file.path}" ${index === 0 ? 'selected' : ''}>${file.display_name}</option>`
+                                        ).join('')}
+                                    </select>
+                                    <button class="btn btn-secondary" onclick="openSlideInNewTab()">Open in New Tab</button>
+                                </div>
+                            </div>
+                            <div style="flex: 1; position: relative;">
+                                <iframe id="research-iframe" 
+                                        src="${firstFile.path}" 
+                                        style="width: 100%; height: 100%; border: none; background: white;">
+                                </iframe>
                             </div>
                         </div>
                     `;
                 } else {
-                    content.innerHTML = '<div class="empty-state">No architecture files available</div>';
+                    content.innerHTML = '<div class="empty-state">No research slides available</div>';
                 }
             } catch (error) {
-                console.error('Failed to load architecture:', error);
-                content.innerHTML = '<div class="empty-state">Failed to load architecture files</div>';
+                console.error('Failed to load research slides:', error);
+                content.innerHTML = '<div class="empty-state">Failed to load research slides</div>';
             }
         }
         
@@ -2444,6 +2468,24 @@
             window.open(filepath, '_blank');
         }
         window.viewArchitectureFile = viewArchitectureFile;
+        
+        // Research slide functions
+        function changeSlide() {
+            const selector = document.getElementById('slide-selector');
+            const iframe = document.getElementById('research-iframe');
+            if (selector && iframe) {
+                iframe.src = selector.value;
+            }
+        }
+        window.changeSlide = changeSlide;
+        
+        function openSlideInNewTab() {
+            const selector = document.getElementById('slide-selector');
+            if (selector) {
+                window.open(selector.value, '_blank');
+            }
+        }
+        window.openSlideInNewTab = openSlideInNewTab;
         window.editDeepContext = editDeepContext;
         window.initializeDeepContext = initializeDeepContext;
         window.saveExtractedPatterns = saveExtractedPatterns;
