@@ -2138,19 +2138,14 @@
                     return;
                 }
                 
-                // Fall back to regular graph endpoint
-                console.log('Falling back to graph API endpoint...');
-                const response = await fetchData(`${API_BASE}/graph/graph?max_nodes=100`);
-                if (response && response.success && response.graph) {
-                    const graphData = response.graph;
-                    console.log(`Graph API returned: ${graphData.nodes?.length || 0} nodes, ${graphData.edges?.length || 0} edges`);
+                // Fall back to simple graph data endpoint (pre-defined hierarchy)
+                console.log('Falling back to graph data endpoint...');
+                const response = await fetchData(`${API_BASE}/graph/data`);
+                if (response && response.nodes && response.edges) {
+                    console.log(`Graph data returned: ${response.nodes.length} nodes, ${response.edges.length} edges`);
                     
-                    // Initialize Cytoscape with actual data
-                    if (graphData.nodes && graphData.nodes.length > 0) {
-                        initializeCytoscape(container, graphData);
-                    } else {
-                        container.innerHTML = '<div class="empty-state">No graph data available</div>';
-                    }
+                    // Data is already in cytoscape format, initialize directly
+                    initializeCytoscapeDirectly(container, response.nodes, response.edges);
                 } else {
                     container.innerHTML = '<div class="empty-state">Failed to load graph data</div>';
                 }
@@ -2160,6 +2155,90 @@
             }
         }
         
+        // Initialize Cytoscape with pre-formatted data  
+        function initializeCytoscapeDirectly(container, nodes, edges) {
+            // Clear container and set up structure
+            container.innerHTML = `
+                <div style="position: relative; height: 100%;">
+                    <div id="cy" style="width: 100%; height: 100%; background: var(--surface-1);"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; background: var(--surface-2); padding: 10px; border-radius: 6px; font-size: 12px;">
+                        <div>Nodes: ${nodes.length}</div>
+                        <div>Edges: ${edges.length}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Data is already in cytoscape format
+            const elements = [...nodes, ...edges];
+            
+            // Initialize Cytoscape
+            const cy = cytoscape({
+                container: container.querySelector('#cy'),
+                elements: elements,
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(label)',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'font-size': '10px',
+                            'color': '#ffffff',
+                            'text-outline-width': 1,
+                            'text-outline-color': '#000000',
+                            'background-color': function(ele) {
+                                const category = ele.data('category');
+                                if (category === 'leadership') return '#f59e0b';
+                                if (category === 'engineering') return '#3b82f6';
+                                if (category === 'research') return '#10b981';
+                                if (category === 'infrastructure') return '#6b7280';
+                                return '#8b5cf6';
+                            },
+                            'width': function(ele) {
+                                const level = ele.data('level');
+                                return level === 0 ? 60 : level === 1 ? 50 : 40;
+                            },
+                            'height': function(ele) {
+                                const level = ele.data('level');
+                                return level === 0 ? 60 : level === 1 ? 50 : 40;
+                            },
+                            'shape': function(ele) {
+                                return ele.data('shape') || 'ellipse';
+                            }
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'line-color': '#6b7280',
+                            'target-arrow-color': '#6b7280',
+                            'target-arrow-shape': 'triangle',
+                            'curve-style': 'bezier',
+                            'font-size': '8px',
+                            'label': 'data(label)',
+                            'text-rotation': 'autorotate',
+                            'text-margin-y': -10
+                        }
+                    }
+                ],
+                layout: {
+                    name: 'breadthfirst',
+                    directed: true,
+                    spacingFactor: 1.5,
+                    animate: true,
+                    animationDuration: 1000
+                }
+            });
+            
+            // Add interaction
+            cy.on('tap', 'node', function(evt) {
+                const node = evt.target;
+                console.log('Node clicked:', node.data());
+                showToast(`Selected: ${node.data('label')}`, 'info');
+            });
+        }
+
         // Initialize Cytoscape graph visualization
         function initializeCytoscape(container, graphData) {
             // Clear container and set up structure
