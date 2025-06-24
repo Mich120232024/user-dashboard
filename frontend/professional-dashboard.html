@@ -2983,24 +2983,24 @@
             viewer.innerHTML = '<div class="loading">Loading document...</div>';
             
             try {
-                const response = await fetch(`${API_BASE}/docs/${doc.id}`);
-                const docData = await response.json();
+                const response = await fetch(`${API_BASE}/docs/content?path=${encodeURIComponent(doc.path)}`);
+                const content = await response.text();
                 
                 viewer.innerHTML = `
                     <div class="doc-header">
-                        <div class="doc-title">${docData.title}</div>
+                        <div class="doc-title">${doc.name}</div>
                         <div class="doc-meta">
-                            <span>Category: ${docData.category}</span>
-                            <span>Owner: ${docData.owner}</span>
-                            <span>Updated: ${new Date(docData.updated_at).toLocaleDateString()}</span>
+                            <span>Category: ${doc.category || 'General'}</span>
+                            <span>Owner: ${doc.owner || 'System'}</span>
+                            <span>Type: ${doc.type || 'markdown'}</span>
                         </div>
                         <div class="doc-actions">
-                            <button class="btn btn-secondary" onclick="downloadDocument('${doc.id}')">Download</button>
-                            <button class="btn btn-secondary" onclick="shareDocument('${doc.id}')">Share</button>
+                            <button class="btn btn-secondary" onclick="downloadDocument('${doc.path}')">Download</button>
+                            <button class="btn btn-secondary" onclick="shareDocument('${doc.path}')">Share</button>
                         </div>
                     </div>
                     <div class="doc-content">
-                        ${docData.content}
+                        <pre style="white-space: pre-wrap; font-family: var(--font-main); line-height: 1.6;">${content}</pre>
                     </div>
                 `;
             } catch (error) {
