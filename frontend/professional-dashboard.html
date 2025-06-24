@@ -887,6 +887,19 @@
         const apiCache = new Map();
         const CACHE_TTL = 30000; // 30 seconds
         
+        // Global ESC key handler for all modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // Close all modals with high z-index
+                const modals = document.querySelectorAll('div[style*="z-index: 10000"]');
+                modals.forEach(modal => modal.remove());
+                
+                // Close any modal overlays
+                const overlays = document.querySelectorAll('div[style*="position: fixed"][style*="background: rgba"]');
+                overlays.forEach(overlay => overlay.remove());
+            }
+        });
+        
         // Enhanced fetch with caching
         async function fetchDataCached(url, skipCache = false) {
             const cacheKey = url;
@@ -2105,7 +2118,7 @@
             
             // Initialize Cytoscape
             const cy = cytoscape({
-                container: document.getElementById('cy'),
+                container: container.querySelector('#cy') || container,
                 elements: elements,
                 style: [
                     {
@@ -2376,6 +2389,23 @@
             `;
             
             document.body.appendChild(modal);
+            
+            // Add ESC key handler for closing modal
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            });
             
             // Load document
             const contentDiv = modal.querySelector('div[style*="overflow-y: auto"]');
