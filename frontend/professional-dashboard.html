@@ -900,14 +900,14 @@
                                 <button class="btn btn-primary" onclick="copyInitialPrompt('${agentName}')" style="width: 100%; margin-bottom: 8px;">
                                     📋 Copy Initial Prompt Command
                                 </button>
-                                <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+                                <div style="font-size: 11px; color: var(--text-secondary); text-align: center;">
                                     Click to copy: "Please set yourself as ${agentName} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md"
                                 </div>
                             </div>
                         </div>
                         
                         <div class="card" style="margin-top: 16px;">
-                            <h4>Agent Shell Files</h4>
+                            <h4 style="color: var(--accent-blue); margin-bottom: 12px;">Agent Shell Files</h4>
                             <div style="font-family: var(--font-mono); font-size: 12px;">
                                 <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'memory_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 memory_context.md</div>
                                 <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'deep_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 deep_context.md</div>
@@ -927,7 +927,7 @@
             
             detailsEl.innerHTML = `
                 <div style="padding: 20px;">
-                    <h3>${cleanAgentName(agentName)}</h3>
+                    <h3 style="color: var(--text-primary); margin-bottom: 16px;">${cleanAgentName(agentName)}</h3>
                     
                     <div class="stats-grid" style="margin-top: 16px;">
                         <div class="stat-card">
@@ -946,14 +946,14 @@
                             <button class="btn btn-primary" onclick="copyInitialPrompt('${agentName}')" style="width: 100%; margin-bottom: 8px;">
                                 📋 Copy Initial Prompt Command
                             </button>
-                            <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+                            <div style="font-size: 11px; color: var(--text-secondary); text-align: center;">
                                 Click to copy: "Please set yourself as ${agentName} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md"
                             </div>
                         </div>
                     </div>
                     
                     <div class="card" style="margin-top: 16px;">
-                        <h4>Agent Details</h4>
+                        <h4 style="color: var(--accent-blue); margin-bottom: 12px;">Agent Details</h4>
                         <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
                             <div>• Role: ${details.role || 'N/A'}</div>
                             <div>• Shell: /Agent_Shells/${agentName}/</div>
@@ -963,7 +963,7 @@
                     </div>
                     
                     <div class="card" style="margin-top: 16px;">
-                        <h4>Agent Shell Files</h4>
+                        <h4 style="color: var(--accent-blue); margin-bottom: 12px;">Agent Shell Files</h4>
                         <div style="font-family: var(--font-mono); font-size: 12px;">
                             <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'memory_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 memory_context.md</div>
                             <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'deep_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 deep_context.md</div>
@@ -1733,9 +1733,9 @@
         function initializeCytoscape(container, graphData) {
             // Clear container and set up structure
             container.innerHTML = `
-                <div style="position: relative; height: 100%;">
+                <div style="position: relative; height: 100%; overflow: hidden;">
                     <div id="cy" style="width: 100%; height: 100%; background: var(--surface-1);"></div>
-                    <div style="position: absolute; top: 10px; right: 10px; background: var(--surface-2); padding: 10px; border-radius: 6px; font-size: 12px;">
+                    <div style="position: absolute; top: 10px; right: 10px; background: var(--surface-2); padding: 10px; border-radius: 6px; font-size: 12px; z-index: 10;">
                         <div>Nodes: ${graphData.nodes.length}</div>
                         <div>Edges: ${graphData.edges.length}</div>
                     </div>
@@ -2142,11 +2142,52 @@
         
         async function loadResearch() {
             const content = document.getElementById('research-content');
-            content.innerHTML = '<div class="loading">Loading research visualization...</div>';
+            content.innerHTML = '<div class="loading">Loading architecture files...</div>';
             
-            setTimeout(() => {
-                content.innerHTML = '<div class="empty-state">Research visualization coming soon</div>';
-            }, 500);
+            try {
+                const response = await fetch(`${API_BASE}/architecture/list`);
+                const data = await response.json();
+                
+                if (data.files && data.files.length > 0) {
+                    // Group files by category
+                    const categories = {};
+                    data.files.forEach(file => {
+                        const category = file.category || 'General';
+                        if (!categories[category]) {
+                            categories[category] = [];
+                        }
+                        categories[category].push(file);
+                    });
+                    
+                    content.innerHTML = `
+                        <div style="padding: 20px; height: 100%; display: flex; flex-direction: column;">
+                            <h3 style="margin-bottom: 20px;">Architecture Documentation</h3>
+                            <div style="flex: 1; overflow-y: auto;">
+                                ${Object.entries(categories).map(([category, files]) => `
+                                    <div class="card" style="margin-bottom: 20px;">
+                                        <h4 style="margin-bottom: 10px; color: var(--accent-blue);">${category}</h4>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
+                                            ${files.map(file => `
+                                                <div class="selectable-item" onclick="viewArchitectureFile('${file.path}')" 
+                                                     style="padding: 10px; cursor: pointer; border: 1px solid var(--border-color); 
+                                                            border-radius: 4px; background: var(--bg-dark);">
+                                                    <div style="font-weight: 500;">${file.display_name}</div>
+                                                    <div style="font-size: 0.9em; color: var(--text-secondary);">${file.size}</div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<div class="empty-state">No architecture files available</div>';
+                }
+            } catch (error) {
+                console.error('Failed to load architecture:', error);
+                content.innerHTML = '<div class="empty-state">Failed to load architecture files</div>';
+            }
         }
         
         async function loadDocumentation() {
@@ -2397,6 +2438,12 @@
         window.selectDeepContextAgent = selectDeepContextAgent;
         window.extractPatterns = extractPatterns;
         window.analyzePatterns = analyzePatterns;
+        
+        // Architecture file viewer
+        function viewArchitectureFile(filepath) {
+            window.open(filepath, '_blank');
+        }
+        window.viewArchitectureFile = viewArchitectureFile;
         window.editDeepContext = editDeepContext;
         window.initializeDeepContext = initializeDeepContext;
         window.saveExtractedPatterns = saveExtractedPatterns;
