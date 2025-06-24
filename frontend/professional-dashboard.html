@@ -2155,20 +2155,43 @@
             
             // Special handling for different document types
             if (doc.type === 'AGENT_CONTEXT_MEMORY') {
-                if (doc.agentContext) {
-                    content.push(`<div><strong>Agent:</strong> ${doc.agentName || 'Unknown'}</div>`);
-                    content.push(`<div><strong>Session:</strong> ${doc.agentContext.sessionId || 'N/A'}</div>`);
-                    content.push(`<div><strong>Last Update:</strong> ${doc.agentContext.lastUpdateTime || 'N/A'}</div>`);
-                    
-                    if (doc.agentContext.contextSummary) {
-                        content.push('<div style="margin-top: 10px;"><strong>Context Summary:</strong></div>');
-                        content.push(`<div style="margin-left: 20px; white-space: pre-wrap;">${doc.agentContext.contextSummary}</div>`);
+                // New format for context memory
+                content.push(`<div><strong>Agent:</strong> ${doc.agent_name || doc.agentName || 'Unknown'}</div>`);
+                content.push(`<div><strong>Last Updated:</strong> ${doc.last_updated || 'N/A'}</div>`);
+                
+                // Layer 1 Constitutional
+                if (doc.layer1_constitutional) {
+                    const layer1 = doc.layer1_constitutional;
+                    if (layer1.agent_identity) {
+                        content.push('<div style="margin-top: 15px;"><strong>🏛️ Constitutional Identity:</strong></div>');
+                        content.push(`<div style="margin-left: 20px;">Role: ${layer1.agent_identity.role}</div>`);
+                        content.push(`<div style="margin-left: 20px;">Reports to: ${layer1.agent_identity.reports_to}</div>`);
+                        content.push(`<div style="margin-left: 20px;">Team: ${layer1.agent_identity.team}</div>`);
                     }
-                    
-                    if (doc.agentContext.recentActions && doc.agentContext.recentActions.length > 0) {
-                        content.push('<div style="margin-top: 10px;"><strong>Recent Actions:</strong></div>');
-                        doc.agentContext.recentActions.forEach(action => {
-                            content.push(`<div style="margin-left: 20px;">• ${action}</div>`);
+                }
+                
+                // Layer 2 Compliance
+                if (doc.layer2_compliance) {
+                    const layer2 = doc.layer2_compliance;
+                    if (layer2.compliance_tracking) {
+                        content.push('<div style="margin-top: 15px;"><strong>📊 Compliance Metrics:</strong></div>');
+                        content.push(`<div style="margin-left: 20px;">Evidence Compliance: ${layer2.compliance_tracking.evidence_compliance_rate}%</div>`);
+                        content.push(`<div style="margin-left: 20px;">Task Completion: ${layer2.compliance_tracking.task_completion_rate}%</div>`);
+                        content.push(`<div style="margin-left: 20px;">Work Quality: ${layer2.compliance_tracking.work_quality_score}</div>`);
+                    }
+                }
+                
+                // Layer 3 Operational
+                if (doc.layer3_operational && doc.layer3_operational.current_session) {
+                    const session = doc.layer3_operational.current_session;
+                    content.push('<div style="margin-top: 15px;"><strong>🔧 Current Session:</strong></div>');
+                    if (session.current_task) {
+                        content.push(`<div style="margin-left: 20px;">Task: ${session.current_task.description}</div>`);
+                    }
+                    if (session.active_todos && session.active_todos.length > 0) {
+                        content.push('<div style="margin-left: 20px; margin-top: 5px;">Active TODOs:</div>');
+                        session.active_todos.forEach(todo => {
+                            content.push(`<div style="margin-left: 40px;">• ${todo.task} (${todo.status})</div>`);
                         });
                     }
                 }
