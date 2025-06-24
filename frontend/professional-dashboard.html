@@ -2025,14 +2025,7 @@
             container.innerHTML = '<div class="loading">Loading graph data...</div>';
             
             // First try to get agent context memory nodes
-            const contextResponse = await fetchData(`${API_BASE}/cosmos/agent_context_memory/query`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    query: "SELECT * FROM c WHERE c.type = 'AGENT_CONTEXT_MEMORY'",
-                    parameters: []
-                })
-            });
+            const contextResponse = await fetchData(`${API_BASE}/cosmos/containers/agent_context_memory/documents?limit=50`);
             
             if (contextResponse && contextResponse.documents && contextResponse.documents.length > 0) {
                 // Build graph from context memory
