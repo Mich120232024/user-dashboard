@@ -2142,6 +2142,16 @@
             }
         }
         
+        // Helper to format field names
+        function formatFieldName(fieldName) {
+            return fieldName
+                .replace(/_/g, ' ')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+        
         // Document view toggle functions
         function displayDocumentPreview(container, doc) {
             const content = [];
@@ -2195,6 +2205,17 @@
                         });
                     }
                 }
+                // Layer 4 Historical (if present)
+                if (doc.layer4_historical && doc.layer4_historical.governance_quick_reference) {
+                    content.push('<div style="margin-top: 15px;"><strong>📚 Quick Reference:</strong></div>');
+                    const ref = doc.layer4_historical.governance_quick_reference;
+                    if (ref.standards_summary && ref.standards_summary.agent_requirements) {
+                        content.push('<div style="margin-left: 20px; margin-top: 5px;">Requirements:</div>');
+                        ref.standards_summary.agent_requirements.forEach(req => {
+                            content.push(`<div style="margin-left: 40px; font-size: 0.9em;">• ${req}</div>`);
+                        });
+                    }
+                }
             } else if (doc.subject && doc.content) {
                 // Message format
                 content.push(`<div><strong>Subject:</strong> ${doc.subject}</div>`);
@@ -2206,16 +2227,21 @@
                 content.push('<div style="margin-top: 10px;"><strong>Content:</strong></div>');
                 content.push(`<div style="margin-left: 20px; white-space: pre-wrap;">${doc.content}</div>`);
             } else {
-                // Generic document preview
-                const skipFields = ['_rid', '_self', '_etag', '_attachments', '_ts', 'id', 'timestamp', 'partitionKey'];
+                // Generic document preview - show all fields not in skip list
+                const skipFields = ['_rid', '_self', '_etag', '_attachments', '_ts', 'id', 'timestamp', 'partitionKey', 'type'];
+                
+                // Add document type if present
+                if (doc.type) {
+                    content.push(`<div><strong>Type:</strong> ${doc.type}</div>`);
+                }
                 
                 Object.entries(doc).forEach(([key, value]) => {
                     if (!skipFields.includes(key)) {
                         if (typeof value === 'object' && value !== null) {
-                            content.push(`<div style="margin-top: 10px;"><strong>${key}:</strong></div>`);
+                            content.push(`<div style="margin-top: 10px;"><strong>${formatFieldName(key)}:</strong></div>`);
                             content.push(`<pre style="margin-left: 20px; white-space: pre-wrap; font-size: 12px;">${JSON.stringify(value, null, 2)}</pre>`);
                         } else {
-                            content.push(`<div><strong>${key}:</strong> ${value}</div>`);
+                            content.push(`<div><strong>${formatFieldName(key)}:</strong> ${value}</div>`);
                         }
                     }
                 });
