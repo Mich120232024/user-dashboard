@@ -2183,13 +2183,9 @@
                         id: node.id,
                         label: cleanAgentName(node.label || node.id),
                         type: node.type,
+                        color: node.color || '#3b82f6',
+                        size: 20 + (node.size || 1) * 10,
                         ...node.properties
-                    },
-                    style: {
-                        'background-color': node.color || '#3b82f6',
-                        'width': 20 + (node.size || 1) * 10,
-                        'height': 20 + (node.size || 1) * 10,
-                        'label': cleanAgentName(node.label || node.id)
                     }
                 });
             });
@@ -2229,6 +2225,9 @@
                             'color': '#ffffff',
                             'text-outline-width': 2,
                             'text-outline-color': 'data(color)',
+                            'background-color': 'data(color)',
+                            'width': 'data(size)',
+                            'height': 'data(size)',
                             'background-opacity': 0.9,
                             'border-width': 2,
                             'border-color': '#000000',
