@@ -2190,24 +2190,18 @@
                 });
             });
             
-            // Add edges
+            // Add edges (only if both source and target exist)
             graphData.edges.forEach(edge => {
-                elements.push({
-                    data: {
-                        id: edge.id,
-                        source: edge.source,
-                        target: edge.target,
-                        label: edge.label || edge.type,
-                        ...edge.properties
-                    },
-                    style: {
-                        'line-color': '#6b7280',
-                        'target-arrow-color': '#6b7280',
-                        'target-arrow-shape': 'triangle',
-                        'curve-style': 'bezier',
-                        'label': edge.label || ''
-                    }
-                });
+                if (edge.source && edge.target && edge.id) {
+                    elements.push({
+                        data: {
+                            id: edge.id || `${edge.source}_${edge.target}`,
+                            source: edge.source,
+                            target: edge.target,
+                            label: edge.label || edge.type || ''
+                        }
+                    });
+                }
             });
             
             // Initialize Cytoscape
@@ -2238,10 +2232,15 @@
                         selector: 'edge',
                         style: {
                             'width': 2,
+                            'line-color': '#6b7280',
                             'line-opacity': 0.6,
+                            'target-arrow-color': '#6b7280',
+                            'target-arrow-shape': 'triangle',
+                            'curve-style': 'bezier',
                             'font-size': '10px',
                             'text-rotation': 'autorotate',
-                            'text-margin-y': -10
+                            'text-margin-y': -10,
+                            'label': 'data(label)'
                         }
                     },
                     {
