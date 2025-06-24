@@ -2125,18 +2125,8 @@
             container.innerHTML = '<div class="loading">Loading graph data...</div>';
             
             try {
-                // First try to get agent context memory nodes
-                console.log('Loading graph data from agent context memory...');
-                const contextResponse = await fetchData(`${API_BASE}/cosmos/containers/agent_context_memory/documents?limit=50`);
-                
-                if (contextResponse && contextResponse.documents && contextResponse.documents.length > 0) {
-                    console.log(`Found ${contextResponse.documents.length} documents for graph`);
-                    // Build graph from context memory
-                    const graphData = buildGraphFromContextMemory(contextResponse.documents);
-                    console.log(`Built graph data: ${graphData.nodes.length} nodes, ${graphData.edges.length} edges`);
-                    initializeCytoscape(container, graphData);
-                    return;
-                }
+                // Skip agent context memory and go directly to hierarchy data
+                console.log('Loading graph data from hierarchy endpoint...');
                 
                 // Fall back to simple graph data endpoint (pre-defined hierarchy)
                 console.log('Falling back to graph data endpoint...');
