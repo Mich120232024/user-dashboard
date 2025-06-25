@@ -1,0 +1,754 @@
+/* Smooth UI/UX Enhancements for Professional Dashboard */
+/* Small, impactful improvements for polish and delight */
+
+/* ================================
+   1. MICRO-ANIMATIONS & TRANSITIONS
+   ================================ */
+
+/* Smooth number transitions */
+.stat-value,
+#system-health,
+#total-containers,
+#active-agents,
+#total-documents {
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+/* Number change animation */
+@keyframes numberPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.stat-value.updating {
+    animation: numberPop 0.4s ease-out;
+}
+
+/* Hover lift for all cards */
+.stat-card,
+.card,
+.folder-item,
+.container-item,
+.agent-card,
+.team-member-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.stat-card::after,
+.card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::after,
+.card:hover::after {
+    opacity: 1;
+}
+
+/* Ripple effect for buttons */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* ================================
+   2. LOADING STATES & SKELETONS
+   ================================ */
+
+/* Enhanced skeleton loading with wave effect */
+.skeleton-loader {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, 
+        var(--bg-hover) 0%,
+        var(--bg-card) 10%,
+        var(--bg-hover) 20%
+    );
+    background-size: 200% 100%;
+    animation: skeletonWave 1.5s infinite ease-in-out;
+}
+
+@keyframes skeletonWave {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Smooth loading dots */
+.loading-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+    0%, 80%, 100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    40% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ================================
+   3. SUCCESS & FEEDBACK INDICATORS
+   ================================ */
+
+/* Success checkmark animation */
+.success-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.success-indicator::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 9px;
+    width: 5px;
+    height: 10px;
+    border: solid var(--success-green);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    animation: checkmarkPop 0.3s ease-out forwards;
+}
+
+@keyframes checkmarkPop {
+    to {
+        transform: rotate(45deg) scale(1);
+    }
+}
+
+/* Save indicator */
+.save-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--success-green);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.save-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ================================
+   4. HOVER STATES & INTERACTIONS
+   ================================ */
+
+/* Smooth hover glow */
+.nav-item {
+    position: relative;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-item:hover::before {
+    opacity: 1;
+}
+
+/* Depth on hover for cards */
+.stat-card:hover,
+.team-member-card:hover,
+.viz-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 20px 40px -10px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(59, 130, 246, 0.2),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Interactive list items */
+.folder-item,
+.container-item,
+.message-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.folder-item::before,
+.container-item::before,
+.message-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 0;
+    background: var(--accent-blue);
+    transition: height 0.3s ease;
+}
+
+.folder-item:hover::before,
+.container-item:hover::before,
+.message-item:hover::before {
+    height: 100%;
+}
+
+/* ================================
+   5. PROFESSIONAL TOOLTIPS
+   ================================ */
+
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.95);
+    color: var(--text-primary);
+    font-size: 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ================================
+   6. COPY BUTTON FUNCTIONALITY
+   ================================ */
+
+.copy-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+.copy-button.copied {
+    background: var(--success-green);
+    color: white;
+    border-color: var(--success-green);
+}
+
+.copy-button .icon {
+    transition: transform 0.2s ease;
+}
+
+.copy-button.copied .icon {
+    transform: scale(1.2);
+}
+
+/* ================================
+   7. PROGRESS BARS & METERS
+   ================================ */
+
+/* Animated progress rings */
+.progress-ring {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.progress-ring svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring__circle {
+    fill: none;
+    stroke: var(--bg-hover);
+    stroke-width: 4;
+}
+
+.progress-ring__progress {
+    fill: none;
+    stroke: url(#progress-gradient);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 188.495 188.495;
+    stroke-dashoffset: 188.495;
+    transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Linear progress with stripes */
+.progress-bar-striped {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-striped .progress-bar-fill {
+    background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.1) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.1) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 20px 20px;
+    animation: progressStripes 1s linear infinite;
+}
+
+@keyframes progressStripes {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 20px; }
+}
+
+/* ================================
+   8. SMOOTH SCROLLING
+   ================================ */
+
+/* Custom scrollbar with hover effect */
+.scrollable-container {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.scrollable-container:hover {
+    scrollbar-color: rgba(59, 130, 246, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth scroll behavior */
+.smooth-scroll {
+    scroll-behavior: smooth;
+}
+
+/* Scroll shadows */
+.scroll-shadow-container {
+    position: relative;
+}
+
+.scroll-shadow-container::before,
+.scroll-shadow-container::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 30px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.scroll-shadow-container::before {
+    top: 0;
+    background: linear-gradient(to bottom, var(--bg-card), transparent);
+}
+
+.scroll-shadow-container::after {
+    bottom: 0;
+    background: linear-gradient(to top, var(--bg-card), transparent);
+}
+
+.scroll-shadow-container.scrolled-down::before {
+    opacity: 1;
+}
+
+.scroll-shadow-container.scrolled-up::after {
+    opacity: 1;
+}
+
+/* ================================
+   9. FORM ENHANCEMENTS
+   ================================ */
+
+/* Floating labels */
+.form-group-floating {
+    position: relative;
+    margin-top: 1.5rem;
+}
+
+.form-group-floating input,
+.form-group-floating select {
+    padding-top: 1.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.form-group-floating label {
+    position: absolute;
+    top: 0;
+    left: 0.75rem;
+    transform: translateY(1rem);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    color: var(--text-muted);
+}
+
+.form-group-floating input:focus ~ label,
+.form-group-floating input:not(:placeholder-shown) ~ label,
+.form-group-floating select:focus ~ label,
+.form-group-floating select:valid ~ label {
+    transform: translateY(0.25rem) scale(0.85);
+    color: var(--accent-blue);
+}
+
+/* Input focus glow */
+input:focus,
+select:focus,
+textarea:focus {
+    box-shadow: 
+        0 0 0 3px rgba(59, 130, 246, 0.2),
+        0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+/* ================================
+   10. BADGE ANIMATIONS
+   ================================ */
+
+/* Pulsing notification badge */
+.badge-pulse {
+    position: relative;
+}
+
+.badge-pulse::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Counter animations */
+.counter {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.counter.increment {
+    animation: counterIncrement 0.3s ease;
+}
+
+@keyframes counterIncrement {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+}
+
+/* ================================
+   11. PROFESSIONAL GRADIENTS
+   ================================ */
+
+/* Gradient borders on hover */
+.gradient-border {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 12px;
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #06b6d4, #3b82f6, #8b5cf6);
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.gradient-border:hover::before {
+    opacity: 1;
+}
+
+/* ================================
+   12. MODAL IMPROVEMENTS
+   ================================ */
+
+/* Smooth modal backdrop */
+.modal {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Modal scale animation */
+.modal-content {
+    animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalScale {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ================================
+   13. STATUS ANIMATIONS
+   ================================ */
+
+/* Breathing status dot */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.online {
+    background: var(--success-green);
+    animation: breathe 2s infinite;
+}
+
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+/* Status transition */
+.status-transition {
+    transition: all 0.5s ease;
+}
+
+/* ================================
+   14. CARD DEPTH & SHADOWS
+   ================================ */
+
+/* Dynamic shadows based on elevation */
+.elevation-0 {
+    box-shadow: none;
+}
+
+.elevation-1 {
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.12),
+        0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.elevation-2 {
+    box-shadow: 
+        0 3px 6px rgba(0, 0, 0, 0.16),
+        0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.elevation-3 {
+    box-shadow: 
+        0 10px 20px rgba(0, 0, 0, 0.19),
+        0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+.elevation-4 {
+    box-shadow: 
+        0 14px 28px rgba(0, 0, 0, 0.25),
+        0 10px 10px rgba(0, 0, 0, 0.22);
+}
+
+.elevation-5 {
+    box-shadow: 
+        0 19px 38px rgba(0, 0, 0, 0.30),
+        0 15px 12px rgba(0, 0, 0, 0.22);
+}
+
+/* ================================
+   15. QUICK ACTIONS
+   ================================ */
+
+/* Quick action menu */
+.quick-actions {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+}
+
+.quick-action-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.quick-action-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+}
+
+.quick-action-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8) translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.quick-action-menu.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1) translateY(0);
+}
+
+.quick-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 12px;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s ease;
+}
+
+.quick-action-menu.show .quick-action-item {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.quick-action-menu.show .quick-action-item:nth-child(1) { transition-delay: 0.05s; }
+.quick-action-menu.show .quick-action-item:nth-child(2) { transition-delay: 0.1s; }
+.quick-action-menu.show .quick-action-item:nth-child(3) { transition-delay: 0.15s; }
+
+/* ================================
+   16. PERFORMANCE OPTIMIZATIONS
+   ================================ */
+
+/* GPU acceleration for smooth animations */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+    .stat-card,
+    .card {
+        border-width: 2px;
+    }
+    
+    .btn {
+        border-width: 2px;
+        font-weight: bold;
+    }
+}
