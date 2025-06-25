@@ -118,10 +118,23 @@
             display: none;
             height: 100%;
             padding: 24px;
+            opacity: 0;
         }
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Cards */
@@ -229,10 +242,20 @@
         .btn-primary {
             background: var(--accent-blue);
             color: white;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-primary:hover {
             background: var(--primary-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
         }
 
         .btn-secondary {
@@ -253,6 +276,21 @@
             justify-content: center;
             height: 200px;
             color: var(--text-secondary);
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-secondary);
+            border-radius: 50%;
+            border-top-color: var(--accent-blue);
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Empty State */
@@ -1014,8 +1052,9 @@
         const apiCache = new Map();
         const CACHE_TTL = 30000; // 30 seconds
         
-        // Global ESC key handler for all modals
+        // Global keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // ESC key handler for all modals
             if (e.key === 'Escape') {
                 // Close all modals with high z-index
                 const modals = document.querySelectorAll('div[style*="z-index: 10000"]');
@@ -1024,6 +1063,27 @@
                 // Close any modal overlays
                 const overlays = document.querySelectorAll('div[style*="position: fixed"][style*="background: rgba"]');
                 overlays.forEach(overlay => overlay.remove());
+            }
+            
+            // Tab navigation shortcuts (1-9 keys)
+            if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '9') {
+                const tabIndex = parseInt(e.key) - 1;
+                const navItems = document.querySelectorAll('.nav-item');
+                if (navItems[tabIndex]) {
+                    navItems[tabIndex].click();
+                }
+            }
+            
+            // Slash key to focus search (if on graph tab)
+            if (e.key === '/' && currentTab === 'graph') {
+                e.preventDefault();
+                const searchInput = document.getElementById('graph-search');
+                if (searchInput) searchInput.focus();
+            }
+            
+            // Question mark for help
+            if (e.key === '?' && e.shiftKey) {
+                showKeyboardShortcuts();
             }
         });
         
@@ -2358,6 +2418,44 @@
         // Legacy function for compatibility
         async function loadGraph() {
             loadHierarchy();
+        }
+        
+        // Show keyboard shortcuts help
+        function showKeyboardShortcuts() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="width: 400px;">
+                    <div class="modal-header">
+                        <h3>⌨️ Keyboard Shortcuts</h3>
+                        <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: grid; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Switch tabs</span>
+                                <kbd style="background: var(--surface-2); padding: 2px 6px; border-radius: 3px; font-family: monospace;">1-9</kbd>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Close modals</span>
+                                <kbd style="background: var(--surface-2); padding: 2px 6px; border-radius: 3px; font-family: monospace;">ESC</kbd>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Search (Graph tab)</span>
+                                <kbd style="background: var(--surface-2); padding: 2px 6px; border-radius: 3px; font-family: monospace;">/</kbd>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Show this help</span>
+                                <kbd style="background: var(--surface-2); padding: 2px 6px; border-radius: 3px; font-family: monospace;">?</kbd>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary);">
+                            Pro tip: Use number keys 1-9 to quickly navigate between dashboard tabs!
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
         
         // Initialize Cytoscape with pre-formatted data  
