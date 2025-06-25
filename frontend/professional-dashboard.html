@@ -1507,7 +1507,7 @@
                 listEl.innerHTML = data.documents.map(doc => {
                     const docId = doc.id || doc._id || 'unknown';
                     const docType = doc.type || doc.partitionKey || 'document';
-                    const displayName = doc.agent_name || doc.name || doc.title || docId;
+                    const displayName = cleanAgentName(doc.agent_name || doc.name || doc.title || docId);
                     const timestamp = doc._ts ? new Date(doc._ts * 1000).toLocaleString() : 'N/A';
                     
                     return `
@@ -1731,7 +1731,7 @@
         }
         
         function copyInitialPrompt(agentName) {
-            const message = `Please set yourself as ${agentName} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md`;
+            const message = `Please set yourself as ${cleanAgentName(agentName)} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md`;
             
             // Copy to clipboard
             navigator.clipboard.writeText(message).then(() => {
@@ -1798,7 +1798,7 @@
                         <h3 style="color: var(--error); margin-top: 0;">Error Loading File</h3>
                         <p>${error.message}</p>
                         <p style="color: var(--text-2); font-size: 12px;">To view this file manually, run:<br>
-                        <code style="background: var(--surface-2); padding: 4px; border-radius: 4px;">cat '/Agent_Shells/${originalAgentName}/${filePath}'</code></p>
+                        <code style="background: var(--surface-2); padding: 4px; border-radius: 4px;">cat '/Agent Shells/${originalAgentName}/${filePath.replace('_', ' ').replace('.md', '')}'</code></p>
                         <div style="text-align: right; margin-top: 20px;">
                             <button onclick="this.closest('.modal, div').remove()" style="background: var(--primary); color: var(--surface-1); border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
                         </div>
@@ -2798,7 +2798,7 @@
                 if (edge.source && edge.target && edge.id) {
                     elements.push({
                         data: {
-                            id: edge.id || `${edge.source}_${edge.target}`,
+                            id: edge.id || `${edge.source}-${edge.target}`,
                             source: edge.source,
                             target: edge.target,
                             label: edge.label || edge.type || ''
@@ -2909,7 +2909,7 @@
                     // Add agent node
                     nodes.push({
                         id: doc.agent_name,
-                        label: doc.agent_name.replace(/_/g, ' '),
+                        label: cleanAgentName(doc.agent_name),
                         type: 'agent',
                         color: doc.layer1_constitutional?.agent_identity?.team === 'Research_Team' ? '#22c55e' : 
                                doc.layer1_constitutional?.agent_identity?.team === 'Engineering_Team' ? '#3b82f6' : 
@@ -2926,7 +2926,7 @@
                     // Add reporting relationships
                     if (doc.layer1_constitutional?.agent_identity?.reports_to) {
                         edges.push({
-                            id: `${doc.agent_name}_reports_to_${doc.layer1_constitutional.agent_identity.reports_to}`,
+                            id: `${doc.agent_name}-reports-to-${doc.layer1_constitutional.agent_identity.reports_to}`,
                             source: doc.agent_name,
                             target: doc.layer1_constitutional.agent_identity.reports_to,
                             type: 'reports_to',
@@ -2995,10 +2995,10 @@
                             <div class="card" style="margin-bottom: 16px;">
                                 <h4>Agent Identity</h4>
                                 <div style="font-size: 13px; color: var(--text-secondary);">
-                                    <div><strong>Name:</strong> ${doc.agent_name}</div>
+                                    <div><strong>Name:</strong> ${cleanAgentName(doc.agent_name)}</div>
                                     <div><strong>Role:</strong> ${doc.layer1_constitutional?.agent_identity?.role || 'N/A'}</div>
-                                    <div><strong>Team:</strong> ${doc.layer1_constitutional?.agent_identity?.team || 'N/A'}</div>
-                                    <div><strong>Reports to:</strong> ${doc.layer1_constitutional?.agent_identity?.reports_to || 'N/A'}</div>
+                                    <div><strong>Team:</strong> ${doc.layer1_constitutional?.agent_identity?.team?.replace(/_/g, ' ') || 'N/A'}</div>
+                                    <div><strong>Reports to:</strong> ${cleanAgentName(doc.layer1_constitutional?.agent_identity?.reports_to || 'N/A')}</div>
                                     <div><strong>Authority:</strong> ${doc.layer1_constitutional?.agent_identity?.authority_level || 'N/A'}</div>
                                 </div>
                             </div>
@@ -3858,6 +3858,16 @@
             } catch (err) {
                 showToast('Failed to copy to clipboard', 'error');
             }
+        }
+        
+        // Clean field labels (remove underscores, capitalize)
+        function cleanFieldLabel(label) {
+            if (!label) return 'N/A';
+            return label
+                .replace(/_/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
         }
     </script>
     
