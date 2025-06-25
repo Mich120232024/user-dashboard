@@ -7,7 +7,9 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -83,15 +85,29 @@ app.add_middleware(
 # Include API routers
 app.include_router(api_router, prefix="/api/v1")
 
-
-@app.get("/")
-async def root():
-    """Root endpoint."""
-    return {
-        "message": f"Welcome to {settings.app_name}",
-        "version": settings.app_version,
-        "environment": settings.environment,
-    }
+# Serve frontend dashboard
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+    
+    @app.get("/")
+    async def serve_dashboard():
+        """Serve the main dashboard HTML."""
+        dashboard_file = os.path.join(frontend_path, "professional-dashboard.html")
+        if os.path.exists(dashboard_file):
+            return FileResponse(dashboard_file)
+        else:
+            return {"error": "Dashboard file not found"}
+else:
+    @app.get("/")
+    async def root():
+        """Root endpoint - frontend not found."""
+        return {
+            "message": f"Welcome to {settings.app_name}",
+            "version": settings.app_version,
+            "environment": settings.environment,
+            "note": "Frontend dashboard not found",
+        }
 
 
 @app.get("/health")

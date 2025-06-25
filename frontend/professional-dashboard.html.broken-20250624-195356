@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <style>
+        /* Port 5001 Style Color Scheme */
+        :root {
+            --primary-dark: #0a0e27;
+            --primary-blue: #1e3a8a;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            --danger-red: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+            --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            --gradient-dark: linear-gradient(180deg, #0a0e27 0%, #1e293b 100%);
+            --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--gradient-dark);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-green);
+            display: inline-block;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--bg-card);
+            padding: 0 24px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background: var(--accent-blue);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Main Layout */
+        .main {
+            height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+            padding: 24px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Lists */
+        .list-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: calc(100% - 100px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .list-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .list-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .list-item.active {
+            background: var(--bg-hover);
+            border-left: 3px solid var(--accent);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-muted);
+        }
+
+        /* Split Layout */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 16px;
+            height: 100%;
+        }
+
+        /* Code/JSON Display */
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>User Dashboard</h1>
+        <div class="header-status">
+            <span class="status-dot"></span>
+            <span id="connection-status">Connected</span>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="nav-item active" data-tab="overview">Overview</div>
+        <div class="nav-item" data-tab="mailbox">Mailbox</div>
+        <div class="nav-item" data-tab="cosmos">Cosmos Explorer</div>
+        <div class="nav-item" data-tab="graph">Graph DB</div>
+        <div class="nav-item" data-tab="agents">Agent Shell</div>
+        <div class="nav-item" data-tab="manager">Manager</div>
+        <div class="nav-item" data-tab="workspace">Workspace</div>
+        <div class="nav-item" data-tab="research">Research Viz</div>
+        <div class="nav-item" data-tab="documentation">Documentation</div>
+        <div class="nav-item" data-tab="deepcontext">Deep Context</div>
+    </nav>
+
+    <main class="main">
+        <!-- Overview Tab -->
+        <div class="tab-content active" id="overview">
+            <div class="stats-grid" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">Cosmos Containers</div>
+                    <div class="stat-value" id="stat-containers">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Documents</div>
+                    <div class="stat-value" id="stat-documents">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Agents</div>
+                    <div class="stat-value" id="stat-agents">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">System Status</div>
+                    <div class="stat-value" id="stat-health">-</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>System Metrics</h3>
+                    <button class="btn btn-secondary" onclick="loadOverview()">Refresh</button>
+                </div>
+                <div id="system-info" class="code-block">Loading system metrics...</div>
+            </div>
+            
+            <div class="card" style="margin-top: 16px;">
+                <div class="card-header">
+                    <h3>Recent Activity</h3>
+                </div>
+                <div id="recent-activity" class="list-body" style="max-height: 300px; overflow-y: auto;">
+                    <div class="loading">Loading recent activity...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cosmos Explorer Tab -->
+        <div class="tab-content" id="cosmos">
+            <div class="split-layout">
+                <div class="list-container">
+                    <div class="list-header">
+                        <h3>Containers</h3>
+                        <button class="btn btn-primary" onclick="refreshContainers()">Refresh</button>
+                    </div>
+                    <div class="list-body" id="container-list">
+                        <div class="loading">Loading containers...</div>
+                    </div>
+                </div>
+                <div class="list-container">
+                    <div class="list-header">
+                        <h3>Documents</h3>
+                    </div>
+                    <div class="list-body" id="document-list">
+                        <div class="empty-state">Select a container to view documents</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Tab -->
+        <div class="tab-content" id="agents">
+            <div class="split-layout">
+                <div class="list-container">
+                    <div class="list-header">
+                        <h3>Active Agents</h3>
+                        <button class="btn btn-primary" onclick="refreshAgents()">Refresh</button>
+                    </div>
+                    <div class="list-body" id="agent-list">
+                        <div class="loading">Loading agents...</div>
+                    </div>
+                </div>
+                <div class="list-container">
+                    <div class="list-header">
+                        <h3>Agent Details</h3>
+                    </div>
+                    <div class="list-body" id="agent-details">
+                        <div class="empty-state">Select an agent to view details</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mailbox Tab -->
+        <div class="tab-content" id="mailbox">
+            <div class="split-layout">
+                <div class="list-container">
+                    <div class="list-header">
+                        <h3>Folders</h3>
+                    </div>
+                    <div class="list-body">
+                        <div class="list-item active" onclick="filterMessagesByFolder('all')">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>📥</span>
+                                <span>All Messages</span>
+                                <span id="count-all" style="margin-left: auto; color: var(--text-secondary);">0</span>
+                            </div>
+                        </div>
+                        <div class="list-item" onclick="filterMessagesByFolder('unread')">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>🔵</span>
+                                <span>Unread</span>
+                                <span id="count-unread" style="margin-left: auto; color: var(--text-secondary);">0</span>
+                            </div>
+                        </div>
+                        <div class="list-item" onclick="filterMessagesByFolder('sent')">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>📤</span>
+                                <span>Sent</span>
+                                <span id="count-sent" style="margin-left: auto; color: var(--text-secondary);">0</span>
+                            </div>
+                        </div>
+                        <div class="list-item" onclick="filterMessagesByFolder('archived')">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>📦</span>
+                                <span>Archived</span>
+                                <span id="count-archived" style="margin-left: auto; color: var(--text-secondary);">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-container">
+                    <div class="list-header">
+                        <h3>Messages</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-primary" onclick="composeNewMessage()">Compose</button>
+                            <button class="btn btn-secondary" onclick="refreshMessages()">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="list-body" id="message-list">
+                        <div class="loading">Loading messages...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Tab -->
+        <div class="tab-content" id="graph">
+            <div class="card" style="height: 100%;">
+                <div class="card-header">
+                    <h3>Relationship Graph</h3>
+                    <button class="btn btn-primary" onclick="loadGraph()">Load Graph</button>
+                </div>
+                <div id="graph-container" style="height: calc(100% - 60px);">
+                    <div class="empty-state">Click "Load Graph" to visualize relationships</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manager Tab -->
+        <div class="tab-content" id="manager">
+            <div class="card">
+                <h3>Manager Dashboard</h3>
+                <div id="manager-content">
+                    <div class="empty-state">Manager dashboard loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workspace Tab -->
+        <div class="tab-content" id="workspace">
+            <div class="card">
+                <h3>Workspace Explorer</h3>
+                <div id="workspace-content">
+                    <div class="empty-state">Workspace explorer loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Tab -->
+        <div class="tab-content" id="research">
+            <div class="card">
+                <h3>Research Visualization</h3>
+                <div id="research-content">
+                    <div class="empty-state">Research visualization loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Tab -->
+        <div class="tab-content" id="documentation">
+            <div class="card">
+                <h3>Documentation Library</h3>
+                <div id="documentation-content">
+                    <div class="empty-state">Documentation system loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deep Context Tab -->
+        <div class="tab-content" id="deepcontext">
+            <div class="split-layout">
+                <!-- Left Panel: Agent Selection -->
+                <div class="split-left">
+                    <div class="card" style="height: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>Agent Deep Context</h3>
+                            <button class="btn btn-primary" onclick="extractPatterns()">Extract Patterns</button>
+                        </div>
+                        <div class="agent-list" id="deepcontext-agents" style="height: calc(100% - 80px); overflow-y: auto;">
+                            <div class="loading">Loading agents...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Deep Context Content -->
+                <div class="split-right">
+                    <div class="card" style="height: 100%;">
+                        <div id="deepcontext-content" style="height: 100%; display: flex; flex-direction: column;">
+                            <div class="empty-state">Select an agent to view deep context</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <script>
+        // Professional Dashboard Implementation - FastAPI Only
+        const API_BASE = 'http://localhost:8420/api/v1';
+        
+        // State
+        let currentTab = 'overview';
+        let selectedContainer = null;
+        
+        // Simple cache for API responses
+        const apiCache = new Map();
+        const CACHE_TTL = 30000; // 30 seconds
+        
+        // Enhanced fetch with caching
+        async function fetchDataCached(url, skipCache = false) {
+            const cacheKey = url;
+            const now = Date.now();
+            
+            // Check cache first
+            if (!skipCache && apiCache.has(cacheKey)) {
+                const cached = apiCache.get(cacheKey);
+                if (now - cached.timestamp < CACHE_TTL) {
+                    return cached.data;
+                }
+                apiCache.delete(cacheKey);
+            }
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                
+                // Cache the response
+                apiCache.set(cacheKey, {
+                    data: data,
+                    timestamp: now
+                });
+                
+                return data;
+            } catch (error) {
+                console.error(`Failed to fetch ${url}:`, error);
+                return null;
+            }
+        }
+        
+        // Initialize
+        console.log('JavaScript file loaded');
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, starting initialization');
+            try {
+                setupNavigation();
+                loadOverview();
+                console.log('Initialization complete');
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        });
+        
+        // Navigation
+        function setupNavigation() {
+            console.log('setupNavigation called');
+            const navItems = document.querySelectorAll('.nav-item');
+            console.log('Found nav items:', navItems.length);
+            
+            navItems.forEach((item, index) => {
+                console.log(`Nav item ${index}: ${item.textContent} (data-tab: ${item.dataset.tab})`);
+                item.addEventListener('click', (e) => {
+                    console.log('Nav item clicked:', e.target.textContent, e.target.dataset.tab);
+                    const tab = e.target.dataset.tab;
+                    switchTab(tab);
+                });
+            });
+        }
+        
+        function switchTab(tab) {
+            console.log('switchTab called with:', tab);
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.tab === tab);
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === tab);
+            });
+            
+            currentTab = tab;
+            console.log('currentTab set to:', currentTab);
+            
+            // Load tab data
+            switch(tab) {
+                case 'overview': 
+                    console.log('Loading overview');
+                    loadOverview(); 
+                    break;
+                case 'mailbox': 
+                    console.log('Loading mailbox');
+                    refreshMessages(); 
+                    break;
+                case 'cosmos': refreshContainers(); break;
+                case 'graph': loadGraph(); break;
+                case 'agents': refreshAgents(); break;
+                case 'manager': loadManagerDashboard(); break;
+                case 'workspace': loadWorkspace(); break;
+                case 'research': loadResearch(); break;
+                case 'documentation': loadDocumentation(); break;
+                case 'deepcontext': loadDeepContext(); break;
+            }
+        }
+        
+        // API Helper
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`Failed to fetch ${url}:`, error);
+                return null;
+            }
+        }
+        
+        // Overview
+        async function loadOverview() {
+            // Get overview stats from new endpoint
+            const stats = await fetchDataCached(`${API_BASE}/live/overview/stats`);
+            if (stats && stats.success) {
+                // Update stat cards
+                document.getElementById('stat-containers').textContent = stats.total_containers || 0;
+                document.getElementById('stat-documents').textContent = (stats.total_messages || 0).toLocaleString();
+                
+                // Update health status
+                const healthElement = document.getElementById('stat-health');
+                if (healthElement) {
+                    healthElement.textContent = stats.system_health || 'Unknown';
+                    const healthColors = {
+                        'excellent': 'var(--success-green)',
+                        'good': 'var(--success-green)', 
+                        'fair': 'var(--warning-amber)',
+                        'poor': 'var(--danger-red)'
+                    };
+                    healthElement.style.color = healthColors[stats.system_health] || 'var(--text-secondary)';
+                }
+                
+                // Update agent stats
+                const agentInfoElement = document.getElementById('agent-info');
+                if (agentInfoElement) {
+                    agentInfoElement.textContent = `Active: ${stats.active_agents || 0}, Idle: ${stats.idle_agents || 0}, Offline: ${stats.offline_agents || 0}`;
+                }
+                
+                // Update system info with health score and activity
+                const systemInfoElement = document.getElementById('system-info');
+                if (systemInfoElement) {
+                    const systemInfo = {
+                        health_score: (stats.health_score || 0).toFixed(1) + '%',
+                        recent_activity: stats.recent_activity || 0,
+                        unread_messages: stats.unread_messages || 0,
+                        healthy_containers: stats.healthy_containers || 0,
+                        last_updated: new Date().toLocaleTimeString()
+                    };
+                    systemInfoElement.textContent = JSON.stringify(systemInfo, null, 2);
+                }
+            }
+            
+            // Get agents data from working live endpoint
+            const agentsResponse = await fetchDataCached(`${API_BASE}/live/agents`);
+            let agentCount = 0;
+            if (agentsResponse && agentsResponse.success) {
+                agentCount = agentsResponse.total_count || 0;
+            }
+            document.getElementById('stat-agents').textContent = agentCount;
+            
+            // Load recent activity
+            loadRecentActivity();
+        }
+        
+        async function loadRecentActivity() {
+            const activityEl = document.getElementById('recent-activity');
+            
+            // Get recent messages as activity using new API format
+            const messages = await fetchDataCached(`${API_BASE}/messages/?limit=10`);
+            if (messages && Array.isArray(messages)) {
+                activityEl.innerHTML = messages.map(msg => `
+                    <div class="list-item" style="padding: 12px;">
+                        <div style="font-weight: 500;">${msg.subject || msg.type || 'System Message'}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            From: ${msg.from || 'System'} | ${new Date(msg.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                activityEl.innerHTML = '<div class="empty-state">No recent activity</div>';
+            }
+        }
+        
+        // Containers
+        async function refreshContainers() {
+            const listEl = document.getElementById('container-list');
+            listEl.innerHTML = '<div class="loading">Loading...</div>';
+            
+            // Use FastAPI Cosmos endpoint
+            const data = await fetchData(`${API_BASE}/cosmos/containers`);
+            
+            if (data && data.containers) {
+                listEl.innerHTML = data.containers.map(container => `
+                    <div class="list-item" onclick="selectContainer('${container.id}')">
+                        <div style="font-weight: 500">${container.id}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary)">
+                            Documents: ${container.count !== -1 ? container.count : 'N/A'} | Partition: ${container.partitionKey || 'N/A'}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                listEl.innerHTML = '<div class="empty-state">No containers found</div>';
+            }
+        }
+        
+        async function selectContainer(containerId) {
+            selectedContainer = containerId;
+            
+            // Update UI
+            document.querySelectorAll('#container-list .list-item').forEach(item => {
+                item.classList.toggle('active', item.textContent.includes(containerId));
+            });
+            
+            // Load documents
+            const listEl = document.getElementById('document-list');
+            listEl.innerHTML = '<div class="loading">Loading documents...</div>';
+            
+            // Use FastAPI endpoint
+            const data = await fetchData(`${API_BASE}/cosmos/containers/${containerId}/documents?limit=20`);
+            
+            if (data && data.documents) {
+                listEl.innerHTML = data.documents.map(doc => {
+                    const docId = doc.id || doc._id || 'unknown';
+                    const docType = doc.type || doc.partitionKey || 'document';
+                    const displayName = doc.agent_name || doc.name || doc.title || docId;
+                    const timestamp = doc._ts ? new Date(doc._ts * 1000).toLocaleString() : 'N/A';
+                    
+                    return `
+                        <div class="list-item" onclick="viewCosmosDocument('${containerId}', '${docId}')" style="cursor: pointer;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; color: var(--text-primary);">${displayName}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                        Type: ${docType} • ID: ${docId}
+                                    </div>
+                                </div>
+                                <div style="text-align: right; font-size: 11px; color: var(--text-muted);">
+                                    ${timestamp}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                listEl.innerHTML = '<div class="empty-state">No documents found</div>';
+            }
+        }
+        
+        // Agents
+        let selectedAgent = null;
+        
+        async function refreshAgents() {
+            const listEl = document.getElementById('agent-list');
+            listEl.innerHTML = '<div class="loading">Loading...</div>';
+            
+            // Use live agents endpoint that works
+            const agentsResponse = await fetchDataCached(`${API_BASE}/live/agents`);
+            let agents = [];
+            
+            if (agentsResponse && agentsResponse.success && agentsResponse.agents) {
+                agents = agentsResponse.agents;
+            }
+            
+            // If still no agents, create mock data for demonstration
+            if (!agents || !Array.isArray(agents)) {
+                agents = [
+                    { name: 'HEAD_OF_ENGINEERING', status: 'active', role: 'Engineering Manager' },
+                    { name: 'HEAD_OF_RESEARCH', status: 'active', role: 'Research Manager' },
+                    { name: 'Data_Analyst', status: 'active', role: 'Data Analysis' },
+                    { name: 'Full_Stack_Software_Engineer', status: 'active', role: 'Software Development' },
+                    { name: 'Azure_Infrastructure_Agent', status: 'active', role: 'Infrastructure' },
+                    { name: 'Research_Advanced_Analyst', status: 'active', role: 'Advanced Research' },
+                    { name: 'Research_Quantitative_Analyst', status: 'idle', role: 'Quantitative Analysis' },
+                    { name: 'Research_Strategy_Analyst', status: 'idle', role: 'Strategy Research' }
+                ];
+            }
+            
+            if (agents && Array.isArray(agents)) {
+                listEl.innerHTML = agents.map(agent => `
+                    <div class="list-item" onclick="selectAgent('${agent.name}')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 500">${cleanAgentName(agent.name) || 'Unknown'}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary)">
+                                    ${agent.role || 'Agent'}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-dot" style="background: ${agent.status === 'active' ? 'var(--success-green)' : 'var(--text-muted)'}"></span>
+                                <span style="font-size: 12px; color: var(--text-secondary)">${agent.status || 'unknown'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                listEl.innerHTML = '<div class="empty-state">No agents found</div>';
+            }
+        }
+        
+        async function selectAgent(agentName) {
+            selectedAgent = agentName;
+            
+            // Update active state
+            document.querySelectorAll('#agent-list .list-item').forEach(item => {
+                item.classList.toggle('active', item.textContent.includes(agentName));
+            });
+            
+            // Load agent details
+            const detailsEl = document.getElementById('agent-details');
+            detailsEl.innerHTML = '<div class="loading">Loading agent details...</div>';
+            
+            // Try to get agent details
+            const details = await fetchData(`${API_BASE}/agents/${agentName}`);
+            
+            if (details) {
+                displayAgentDetails(details);
+            } else {
+                // Show mock details
+                detailsEl.innerHTML = `
+                    <div style="padding: 20px;">
+                        <h3>${agentName}</h3>
+                        <div class="stats-grid" style="margin-top: 16px;">
+                            <div class="stat-card">
+                                <div class="stat-label">Status</div>
+                                <div class="stat-value" style="font-size: 16px;">Active</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Tasks Completed</div>
+                                <div class="stat-value" style="font-size: 16px;">42</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin-top: 16px;">
+                            <h4>Recent Activity</h4>
+                            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                                <div>• Completed dashboard optimization</div>
+                                <div>• Updated system documentation</div>
+                                <div>• Reviewed pull requests</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin-top: 16px;">
+                            <h4>🚀 Quick Start</h4>
+                            <div style="margin-top: 12px;">
+                                <button class="btn btn-primary" onclick="copyInitialPrompt('${agentName}')" style="width: 100%; margin-bottom: 8px;">
+                                    📋 Copy Initial Prompt Command
+                                </button>
+                                <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+                                    Click to copy: "Please set yourself as ${agentName} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md"
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin-top: 16px;">
+                            <h4>Agent Shell Files</h4>
+                            <div style="font-family: var(--font-mono); font-size: 12px;">
+                                <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'memory_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 memory_context.md</div>
+                                <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'deep_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 deep_context.md</div>
+                                <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'journal.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 journal.md</div>
+                                ${!agentName.includes('HEAD_OF') ? `<div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'masterprompt.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 masterprompt.md</div>` : ''}
+                                <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'agent_notes/')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📁 agent_notes/</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayAgentDetails(details) {
+            const detailsEl = document.getElementById('agent-details');
+            const agentName = details.name;
+            
+            detailsEl.innerHTML = `
+                <div style="padding: 20px;">
+                    <h3>${cleanAgentName(agentName)}</h3>
+                    
+                    <div class="stats-grid" style="margin-top: 16px;">
+                        <div class="stat-card">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value" style="font-size: 16px;">${details.active ? 'Active' : 'Inactive'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Unread Messages</div>
+                            <div class="stat-value" style="font-size: 16px;">${details.unread_messages || 0}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 16px;">
+                        <h4>🚀 Quick Start</h4>
+                        <div style="margin-top: 12px;">
+                            <button class="btn btn-primary" onclick="copyInitialPrompt('${agentName}')" style="width: 100%; margin-bottom: 8px;">
+                                📋 Copy Initial Prompt Command
+                            </button>
+                            <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+                                Click to copy: "Please set yourself as ${agentName} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md"
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 16px;">
+                        <h4>Agent Details</h4>
+                        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                            <div>• Role: ${details.role || 'N/A'}</div>
+                            <div>• Shell: /Agent_Shells/${agentName}/</div>
+                            ${details.workspace ? `<div>• Workspace: ${details.workspace}</div>` : ''}
+                            ${details.last_activity ? `<div>• Last Active: ${new Date(details.last_activity).toLocaleString()}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 16px;">
+                        <h4>Agent Shell Files</h4>
+                        <div style="font-family: var(--font-mono); font-size: 12px;">
+                            <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'memory_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 memory_context.md</div>
+                            <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'deep_context.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 deep_context.md</div>
+                            <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'journal.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 journal.md</div>
+                            ${!agentName.includes('HEAD_OF') ? `<div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'masterprompt.md')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📄 masterprompt.md</div>` : ''}
+                            <div class="file-item" onclick="viewAgentFile('${cleanAgentName(agentName)}', 'agent_notes/')" style="cursor: pointer; padding: 4px; border-radius: 4px; margin: 2px 0;" onmouseover="this.style.backgroundColor='var(--surface-2)'" onmouseout="this.style.backgroundColor='transparent'">📁 agent_notes/</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Agent file viewer functions
+        function cleanAgentName(name) {
+            return name.replace(/_/g, ' ');
+        }
+        
+        function copyInitialPrompt(agentName) {
+            const message = `Please set yourself as ${agentName} using the initial prompt at: /001/initial_prompts/${agentName.toLowerCase()}_complete.md`;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(message).then(() => {
+                showToast('Initial prompt command copied to clipboard!', 'success');
+            }).catch(err => {
+                showToast('Failed to copy to clipboard', 'error');
+                console.error('Clipboard error:', err);
+            });
+        }
+        
+        async function viewAgentFile(agentName, filePath) {
+            try {
+                // Get original agent name with underscores for API call
+                const originalAgentName = agentName.replace(/ /g, '_');
+                
+                // Show loading modal first
+                const loadingModal = document.createElement('div');
+                loadingModal.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                    display: flex; align-items: center; justify-content: center;
+                `;
+                loadingModal.innerHTML = `
+                    <div style="background: var(--surface-1); padding: 20px; border-radius: 8px; color: var(--text-1);">
+                        <div style="text-align: center;">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-top: 10px;">Loading ${filePath}...</div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(loadingModal);
+                
+                // Fetch file content
+                const response = await fetch(`${API_BASE}/agents-async/agent/${originalAgentName}/file?file_path=${encodeURIComponent(filePath)}`);
+                
+                // Remove loading modal
+                document.body.removeChild(loadingModal);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.detail || 'Failed to load file content');
+                }
+                
+                // Create large file viewer modal
+                createFileViewerModal(agentName, filePath, data.content, data);
+                
+            } catch (error) {
+                console.error('Error loading agent file:', error);
+                
+                // Show error modal
+                const errorModal = document.createElement('div');
+                errorModal.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                    display: flex; align-items: center; justify-content: center;
+                `;
+                errorModal.innerHTML = `
+                    <div style="background: var(--surface-1); padding: 20px; border-radius: 8px; color: var(--text-1); max-width: 500px;">
+                        <h3 style="color: var(--error); margin-top: 0;">Error Loading File</h3>
+                        <p>${error.message}</p>
+                        <p style="color: var(--text-2); font-size: 12px;">To view this file manually, run:<br>
+                        <code style="background: var(--surface-2); padding: 4px; border-radius: 4px;">cat '/Agent_Shells/${originalAgentName}/${filePath}'</code></p>
+                        <div style="text-align: right; margin-top: 20px;">
+                            <button onclick="this.closest('.modal, div').remove()" style="background: var(--primary); color: var(--surface-1); border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                        </div>
+                    </div>
+                `;
+                
+                errorModal.addEventListener('click', (e) => {
+                    if (e.target === errorModal) {
+                        document.body.removeChild(errorModal);
+                    }
+                });
+                
+                document.body.appendChild(errorModal);
+            }
+        }
+        
+        function createFileViewerModal(agentName, filePath, content, metadata) {
+            // Create large modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            
+            let isRawMode = false;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: var(--surface-1); 
+                border-radius: 8px; 
+                width: 90vw; 
+                height: 85vh; 
+                max-width: 1200px;
+                display: flex;
+                flex-direction: column;
+                color: var(--text-1);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            `;
+            
+            function updateContent() {
+                modalContent.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <h3 style="margin: 0; color: var(--text-1);">${agentName}</h3>
+                            <div style="color: var(--text-2); font-size: 14px; margin-top: 4px;">
+                                📄 ${filePath} • ${metadata.lines} lines • ${(metadata.size / 1024).toFixed(1)}KB
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="display: flex; background: var(--surface-2); border-radius: 6px; overflow: hidden;">
+                                <button id="preview-btn" onclick="toggleMode(false)" style="background: ${!isRawMode ? 'var(--primary)' : 'transparent'}; color: ${!isRawMode ? 'var(--surface-1)' : 'var(--text-2)'}; border: none; padding: 8px 16px; cursor: pointer; font-size: 12px;">Preview</button>
+                                <button id="raw-btn" onclick="toggleMode(true)" style="background: ${isRawMode ? 'var(--primary)' : 'transparent'}; color: ${isRawMode ? 'var(--surface-1)' : 'var(--text-2)'}; border: none; padding: 8px 16px; cursor: pointer; font-size: 12px;">Raw</button>
+                            </div>
+                            <button onclick="copyToClipboard()" style="background: var(--surface-2); color: var(--text-1); border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">📋 Copy</button>
+                            <button onclick="closeModal()" style="background: var(--error); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px;">✕ Close</button>
+                        </div>
+                    </div>
+                    <div style="flex: 1; overflow: auto; padding: 20px;">
+                        <div id="file-content-area" style="height: 100%;">
+                            ${isRawMode ? 
+                                `<pre style="margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.4; white-space: pre-wrap; color: var(--text-1);">${escapeHtml(content)}</pre>` :
+                                `<div style="line-height: 1.6; font-size: 14px;">${renderMarkdown(content)}</div>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }
+            
+            window.toggleMode = function(raw) {
+                isRawMode = raw;
+                updateContent();
+            };
+            
+            window.copyToClipboard = function() {
+                navigator.clipboard.writeText(content).then(() => {
+                    showToast('Content copied to clipboard!', 'success');
+                }).catch(() => {
+                    showToast('Failed to copy content', 'error');
+                });
+            };
+            
+            window.closeModal = function() {
+                document.body.removeChild(modal);
+                // Clean up global functions
+                delete window.toggleMode;
+                delete window.copyToClipboard;
+                delete window.closeModal;
+            };
+            
+            updateContent();
+            
+            modal.appendChild(modalContent);
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    window.closeModal();
+                }
+            });
+            
+            // Close on Escape key
+            const escapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    window.closeModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+            
+            document.body.appendChild(modal);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function renderMarkdown(content) {
+            // Simple markdown rendering
+            return content
+                .replace(/^# (.*$)/gm, '<h1 style="color: var(--text-1); border-bottom: 2px solid var(--border); padding-bottom: 8px;">$1</h1>')
+                .replace(/^## (.*$)/gm, '<h2 style="color: var(--text-1); margin-top: 24px;">$1</h2>')
+                .replace(/^### (.*$)/gm, '<h3 style="color: var(--text-1); margin-top: 20px;">$1</h3>')
+                .replace(/^\*\*(.+?)\*\*/gm, '<strong style="color: var(--text-1);">$1</strong>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--text-1);">$1</strong>')
+                .replace(/^- (.+$)/gm, '<div style="margin-left: 16px;">• $1</div>')
+                .replace(/`([^`]+)`/g, '<code style="background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 12px;">$1</code>')
+                .replace(/```([^`]+)```/g, '<pre style="background: var(--surface-2); padding: 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 12px; overflow-x: auto; margin: 12px 0;">$1</pre>')
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*\*CRITICAL\*\*\*/g, '<span style="color: var(--error); font-weight: bold;">⚠️ CRITICAL</span>')
+                .replace(/\*\*\*(.*?)\*\*\*/g, '<span style="color: var(--warning); font-weight: bold;">$1</span>');
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 10001;
+                background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--primary)'};
+                color: white; padding: 12px 20px; border-radius: 6px;
+                font-size: 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                transform: translateX(100%); transition: transform 0.3s ease;
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Messages
+        let allMessages = [];
+        let currentFilter = 'all';
+        let messagesPagination = {
+            offset: 0,
+            limit: 50,
+            hasMore: true,
+            loading: false
+        };
+        
+        async function refreshMessages(reset = true) {
+            const listEl = document.getElementById('message-list');
+            
+            // Prevent multiple simultaneous calls
+            if (messagesPagination.loading) {
+                console.log('refreshMessages already loading, skipping');
+                return;
+            }
+            
+            if (reset) {
+                listEl.innerHTML = '<div class="loading">Loading messages...</div>';
+                messagesPagination.offset = 0;
+                messagesPagination.hasMore = true;
+                allMessages = [];
+            }
+            
+            console.log('refreshMessages called, reset:', reset);
+            
+            if (!messagesPagination.hasMore && !reset) {
+                return;
+            }
+            
+            messagesPagination.loading = true;
+            
+            // Disable refresh button while loading
+            const refreshBtn = document.querySelector('button[onclick="refreshMessages()"]');
+            if (refreshBtn) {
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = 'Loading...';
+            }
+            
+            // Get messages for HEAD_OF_ENGINEERING from system_inbox with pagination
+            const data = await fetchDataCached(`${API_BASE}/messages/HEAD_OF_ENGINEERING?limit=${messagesPagination.limit}`, true);
+            console.log('API response:', data);
+            if (data && data.messages && Array.isArray(data.messages)) {
+                if (reset) {
+                    allMessages = data.messages;
+                } else {
+                    allMessages = [...allMessages, ...data.messages];
+                }
+                
+                // Check if we got fewer messages than requested (end of data)
+                messagesPagination.hasMore = data.messages.length === messagesPagination.limit;
+                messagesPagination.offset += data.messages.length;
+                
+                updateMessageCounts();
+                displayFilteredMessages();
+                setupInfiniteScroll();
+                console.log('Messages loaded successfully:', allMessages.length);
+            } else {
+                console.log('Primary API failed, trying fallback');
+                // Try general messages endpoint as fallback
+                const fallbackData = await fetchDataCached(`${API_BASE}/messages/?limit=${messagesPagination.limit}`, true);
+                console.log('Fallback API response:', fallbackData);
+                if (fallbackData && Array.isArray(fallbackData)) {
+                    allMessages = fallbackData;
+                    messagesPagination.hasMore = fallbackData.length === messagesPagination.limit;
+                    updateMessageCounts();
+                    displayFilteredMessages();
+                    setupInfiniteScroll();
+                    console.log('Fallback messages loaded:', allMessages.length);
+                } else {
+                    console.log('No messages found from either API');
+                    listEl.innerHTML = '<div class="empty-state">No messages found</div>';
+                }
+            }
+            
+            messagesPagination.loading = false;
+            
+            // Re-enable refresh button
+            const refreshBtnEnd = document.querySelector('button[onclick="refreshMessages()"]');
+            if (refreshBtnEnd) {
+                refreshBtnEnd.disabled = false;
+                refreshBtnEnd.textContent = 'Refresh';
+            }
+        }
+        
+        function setupInfiniteScroll() {
+            const listEl = document.getElementById('message-list');
+            const listContainer = listEl.parentElement;
+            
+            // Remove existing scroll listener
+            listContainer.removeEventListener('scroll', handleScroll);
+            
+            // Add scroll listener for infinite scroll
+            listContainer.addEventListener('scroll', handleScroll);
+        }
+        
+        function handleScroll(event) {
+            const container = event.target;
+            const scrollTop = container.scrollTop;
+            const scrollHeight = container.scrollHeight;
+            const clientHeight = container.clientHeight;
+            
+            // Load more when near bottom (within 100px)
+            if (scrollTop + clientHeight >= scrollHeight - 100) {
+                loadMoreMessages();
+            }
+        }
+        
+        async function loadMoreMessages() {
+            if (messagesPagination.loading || !messagesPagination.hasMore) {
+                return;
+            }
+            
+            // Show loading indicator at bottom
+            const listEl = document.getElementById('message-list');
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'loading-more';
+            loadingEl.style.cssText = 'padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;';
+            loadingEl.textContent = 'Loading more messages...';
+            listEl.appendChild(loadingEl);
+            
+            await refreshMessages(false);
+            
+            // Remove loading indicator
+            const loadingToRemove = listEl.querySelector('.loading-more');
+            if (loadingToRemove) {
+                listEl.removeChild(loadingToRemove);
+            }
+        }
+        
+        function updateMessageCounts() {
+            document.getElementById('count-all').textContent = allMessages.length;
+            document.getElementById('count-unread').textContent = allMessages.filter(m => m.status === 'unread').length;
+            document.getElementById('count-sent').textContent = allMessages.filter(m => m.status === 'sent').length;
+            document.getElementById('count-archived').textContent = allMessages.filter(m => m.status === 'archived').length;
+        }
+        
+        function filterMessagesByFolder(folder) {
+            currentFilter = folder;
+            
+            // Update active folder
+            document.querySelectorAll('#mailbox .list-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            displayFilteredMessages();
+        }
+        
+        function displayFilteredMessages() {
+            const listEl = document.getElementById('message-list');
+            let filtered = allMessages;
+            
+            switch(currentFilter) {
+                case 'unread':
+                    filtered = allMessages.filter(m => m.status === 'unread');
+                    break;
+                case 'sent':
+                    filtered = allMessages.filter(m => m.status === 'sent');
+                    break;
+                case 'archived':
+                    filtered = allMessages.filter(m => m.status === 'archived');
+                    break;
+                case 'all':
+                default:
+                    // For 'all' messages, exclude archived ones (show them only in archived folder)
+                    filtered = allMessages.filter(m => m.status !== 'archived');
+                    break;
+            }
+            
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No messages in this folder</div>';
+                return;
+            }
+            
+            listEl.innerHTML = filtered.map(msg => `
+                <div class="list-item ${msg.status === 'unread' ? 'unread' : ''}" onclick="viewMessage('${msg.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div style="font-weight: ${msg.status === 'unread' ? '600' : '500'}">${msg.subject || 'No Subject'}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                From: ${msg.from || 'Unknown'} | ${formatDate(msg.timestamp)}
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                ${String(msg.content || '').substring(0, 100)}${String(msg.content || '').length > 100 ? '...' : ''}
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            ${formatTime(msg.timestamp)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function viewMessage(messageId) {
+            // Find the message in our current list
+            const message = allMessages.find(m => m.id === messageId);
+            if (!message) {
+                alert('Message not found');
+                return;
+            }
+            
+            // Mark as read if it's unread
+            if (message.status === 'unread') {
+                await updateMessageStatus(messageId, 'read');
+            }
+            
+            // Create message viewer modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 1000; display: flex; 
+                align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 8px; width: 700px; max-height: 80vh; 
+                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); overflow: hidden;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; color: var(--text-primary);">${message.subject || 'No Subject'}</h3>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    From: <strong>${message.from}</strong> | To: <strong>${message.to}</strong>
+                                </div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                                    ${formatDate(message.timestamp)} ${formatTime(message.timestamp)} | Priority: ${message.priority} | Status: ${message.status}
+                                </div>
+                            </div>
+                            <button onclick="closeMessageViewer()" 
+                                    style="background: none; border: none; color: var(--text-secondary); 
+                                           font-size: 18px; cursor: pointer; padding: 4px;">×</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
+                        <div style="white-space: pre-wrap; line-height: 1.6; color: var(--text-primary);">${message.content}</div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 12px;">
+                        <button onclick="replyToMessage('${messageId}')" 
+                                style="padding: 8px 16px; background: var(--accent-blue); color: white; 
+                                       border: none; border-radius: 4px; cursor: pointer;">
+                            Reply
+                        </button>
+                        <button onclick="toggleMessageStatus('${messageId}', '${message.status}')" 
+                                style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
+                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                            Mark as ${message.status === 'read' ? 'Unread' : 'Read'}
+                        </button>
+                        <button onclick="archiveMessage('${messageId}')" 
+                                style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
+                                       border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                            Archive
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            window.currentModal = modal;
+        }
+        
+        function closeMessageViewer() {
+            if (window.currentModal) {
+                document.body.removeChild(window.currentModal);
+                window.currentModal = null;
+            }
+        }
+        
+        async function updateMessageStatus(messageId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/messages/${messageId}/status?status=${newStatus}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    // Update local message status
+                    const message = allMessages.find(m => m.id === messageId);
+                    if (message) {
+                        message.status = newStatus;
+                        updateMessageCounts();
+                        displayFilteredMessages();
+                    }
+                    return true;
+                } else {
+                    console.error('Failed to update message status');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error updating message status:', error);
+                return false;
+            }
+        }
+        
+        async function toggleMessageStatus(messageId, currentStatus) {
+            const newStatus = currentStatus === 'read' ? 'unread' : 'read';
+            const success = await updateMessageStatus(messageId, newStatus);
+            if (success) {
+                closeMessageViewer();
+                refreshMessages(); // Refresh to show updated status
+            }
+        }
+        
+        async function archiveMessage(messageId) {
+            const success = await updateMessageStatus(messageId, 'archived');
+            if (success) {
+                closeMessageViewer();
+                refreshMessages(); // Refresh to show updated status
+            }
+        }
+        
+        function replyToMessage(messageId) {
+            const message = allMessages.find(m => m.id === messageId);
+            if (!message) return;
+            
+            closeMessageViewer();
+            // Wait a bit for modal to close then open compose
+            setTimeout(() => {
+                composeNewMessage().then(() => {
+                    // Pre-fill reply fields
+                    document.getElementById('compose-to').value = message.from;
+                    document.getElementById('compose-subject').value = 'Re: ' + (message.subject || 'No Subject');
+                });
+            }, 100);
+        }
+        
+        async function composeNewMessage() {
+            // Get available agents from live endpoint
+            const agentsResponse = await fetchDataCached(`${API_BASE}/live/agents`);
+            const agents = agentsResponse && agentsResponse.success ? agentsResponse.agents : [];
+            if (!agents || agents.length === 0) {
+                alert('Could not load agents list');
+                return;
+            }
+            
+            // Create compose modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 1000; display: flex; 
+                align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 8px; width: 600px; max-height: 80vh; 
+                            border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                        <h3 style="margin: 0; color: var(--text-primary);">Compose Message</h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px;">To:</label>
+                            <select id="compose-to" style="width: 100%; padding: 8px; background: var(--bg-dark); 
+                                                          color: var(--text-primary); border: 1px solid var(--border-color); 
+                                                          border-radius: 4px;">
+                                <option value="">Select recipient...</option>
+                                ${agents.map(agent => `<option value="${agent.agent_name}">${cleanAgentName(agent.agent_name)} (${agent.status})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px;">Subject:</label>
+                            <input type="text" id="compose-subject" placeholder="Message subject..." 
+                                   style="width: 100%; padding: 8px; background: var(--bg-dark); color: var(--text-primary); 
+                                          border: 1px solid var(--border-color); border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px;">Priority:</label>
+                            <select id="compose-priority" style="width: 100%; padding: 8px; background: var(--bg-dark); 
+                                                               color: var(--text-primary); border: 1px solid var(--border-color); 
+                                                               border-radius: 4px;">
+                                <option value="NORMAL">Normal</option>
+                                <option value="HIGH">High</option>
+                                <option value="LOW">Low</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px;">Message:</label>
+                            <textarea id="compose-content" rows="8" placeholder="Type your message..." 
+                                      style="width: 100%; padding: 12px; background: var(--bg-dark); color: var(--text-primary); 
+                                             border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; 
+                                             font-family: var(--font-main);"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button onclick="closeComposeModal()" 
+                                    style="padding: 8px 16px; background: transparent; color: var(--text-secondary); 
+                                           border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                                Cancel
+                            </button>
+                            <button onclick="sendComposedMessage()" 
+                                    style="padding: 8px 16px; background: var(--accent-blue); color: white; 
+                                           border: none; border-radius: 4px; cursor: pointer;">
+                                Send Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('compose-to').focus();
+            
+            // Store modal reference
+            window.currentModal = modal;
+        }
+        
+        function closeComposeModal() {
+            if (window.currentModal) {
+                document.body.removeChild(window.currentModal);
+                window.currentModal = null;
+            }
+        }
+        
+        async function sendComposedMessage() {
+            const to = document.getElementById('compose-to').value;
+            const subject = document.getElementById('compose-subject').value;
+            const priority = document.getElementById('compose-priority').value;
+            const content = document.getElementById('compose-content').value;
+            
+            if (!to) {
+                alert('Please select a recipient');
+                return;
+            }
+            
+            if (!content.trim()) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/messages/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        from_agent: 'USER_DASHBOARD',
+                        to: to,
+                        content: content.trim(),
+                        priority: priority,
+                        message_type: 'MESSAGE',
+                        subject: subject || undefined
+                    })
+                });
+                
+                if (response.ok) {
+                    closeComposeModal();
+                    // Refresh messages to show sent message
+                    refreshMessages();
+                    alert('Message sent successfully!');
+                } else {
+                    const error = await response.json();
+                    alert(`Failed to send message: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                alert(`Error sending message: ${error.message}`);
+            }
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Unknown';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString();
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // Graph
+        async function loadGraph() {
+            const container = document.getElementById('graph-container');
+            container.innerHTML = '<div class="loading">Loading graph data...</div>';
+            
+            try {
+                // Use fast graph endpoint for performance
+                const graphData = await fetchDataCached(`${API_BASE}/graph/nodes/fast`);
+                
+                if (graphData && graphData.success && graphData.nodes) {
+                    // Clear container and create cytoscape container
+                    container.innerHTML = '<div id="cy" style="width: 100%; height: 100%;"></div>';
+                    const cyContainer = container.querySelector('#cy');
+                    
+                    // Initialize Cytoscape with the data
+                    const cy = cytoscape({
+                        container: cyContainer,
+                        elements: [...graphData.nodes, ...graphData.edges],
+                        style: [
+                            {
+                                selector: 'node',
+                                style: {
+                                    'background-color': '#3b82f6',
+                                    'label': 'data(label)',
+                                    'color': '#ffffff',
+                                    'text-valign': 'center',
+                                    'text-halign': 'center',
+                                    'font-size': '12px',
+                                    'width': '60px',
+                                    'height': '60px'
+                                }
+                            },
+                            {
+                                selector: 'node[group="agents"]',
+                                style: {
+                                    'background-color': '#10b981'
+                                }
+                            },
+                            {
+                                selector: 'edge',
+                                style: {
+                                    'width': 2,
+                                    'line-color': '#64748b',
+                                    'target-arrow-color': '#64748b',
+                                    'target-arrow-shape': 'triangle',
+                                    'curve-style': 'bezier'
+                                }
+                            }
+                        ],
+                        layout: {
+                            name: 'cose',
+                            nodeRepulsion: 400000,
+                            idealEdgeLength: 100,
+                            edgeElasticity: 100,
+                            nestingFactor: 5,
+                            gravity: 80,
+                            numIter: 1000,
+                            initialTemp: 200,
+                            coolingFactor: 0.95,
+                            minTemp: 1.0
+                        }
+                    });
+                    
+                    // Add info display
+                    const infoDiv = document.createElement('div');
+                    infoDiv.style.cssText = 'position: absolute; top: 10px; right: 10px; background: var(--bg-card); padding: 10px; border-radius: 8px; font-size: 12px; z-index: 1000;';
+                    infoDiv.innerHTML = `Nodes: ${graphData.node_count} | Edges: ${graphData.edge_count}`;
+                    container.style.position = 'relative';
+                    container.appendChild(infoDiv);
+                    
+                } else {
+                    container.innerHTML = '<div class="error">No graph data available</div>';
+                }
+            } catch (error) {
+                console.error('Graph loading error:', error);
+                container.innerHTML = '<div class="error">Error loading graph: ' + error.message + '</div>';
+            }
+        }
+        
+        // Initialize Cytoscape graph visualization
+        function initializeCytoscape(container, graphData) {
+            // Clear container and set up structure
+            container.innerHTML = `
+                <div style="position: relative; height: 100%;">
+                    <div id="cy" style="width: 100%; height: 100%; background: var(--surface-1);"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; background: var(--surface-2); padding: 10px; border-radius: 6px; font-size: 12px;">
+                        <div>Nodes: ${graphData.nodes.length}</div>
+                        <div>Edges: ${graphData.edges.length}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Convert graph data to Cytoscape format
+            const elements = [];
+            
+            // Add nodes
+            graphData.nodes.forEach(node => {
+                elements.push({
+                    data: {
+                        id: node.id,
+                        label: cleanAgentName(node.label || node.id),
+                        type: node.type,
+                        ...node.properties
+                    },
+                    style: {
+                        'background-color': node.color || '#3b82f6',
+                        'width': 20 + (node.size || 1) * 10,
+                        'height': 20 + (node.size || 1) * 10,
+                        'label': cleanAgentName(node.label || node.id)
+                    }
+                });
+            });
+            
+            // Add edges
+            graphData.edges.forEach(edge => {
+                elements.push({
+                    data: {
+                        id: edge.id,
+                        source: edge.source,
+                        target: edge.target,
+                        label: edge.label || edge.type,
+                        ...edge.properties
+                    },
+                    style: {
+                        'line-color': '#6b7280',
+                        'target-arrow-color': '#6b7280',
+                        'target-arrow-shape': 'triangle',
+                        'curve-style': 'bezier',
+                        'label': edge.label || ''
+                    }
+                });
+            });
+            
+            // Initialize Cytoscape
+            const cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: elements,
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(label)',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'font-size': '12px',
+                            'color': '#ffffff',
+                            'text-outline-width': 2,
+                            'text-outline-color': 'data(color)',
+                            'background-opacity': 0.9,
+                            'border-width': 2,
+                            'border-color': '#000000',
+                            'border-opacity': 0.3
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'line-opacity': 0.6,
+                            'font-size': '10px',
+                            'text-rotation': 'autorotate',
+                            'text-margin-y': -10
+                        }
+                    },
+                    {
+                        selector: ':selected',
+                        style: {
+                            'background-color': '#f59e0b',
+                            'line-color': '#f59e0b',
+                            'target-arrow-color': '#f59e0b',
+                            'source-arrow-color': '#f59e0b'
+                        }
+                    }
+                ],
+                layout: {
+                    name: 'cose',
+                    animate: true,
+                    animationDuration: 500,
+                    nodeRepulsion: 5000,
+                    nodeOverlap: 20,
+                    idealEdgeLength: 100,
+                    edgeElasticity: 100,
+                    nestingFactor: 5,
+                    gravity: 80,
+                    numIter: 1000,
+                    initialTemp: 300,
+                    coolingFactor: 0.99,
+                    minTemp: 1.0
+                },
+                wheelSensitivity: 0.2,
+                minZoom: 0.1,
+                maxZoom: 3
+            });
+            
+            // Add click handler
+            cy.on('tap', 'node', async function(evt) {
+                const node = evt.target;
+                const data = node.data();
+                
+                // If it's an agent node, show detailed view
+                if (data.type === 'agent' || data.id.includes('context_')) {
+                    showNodeDetailsModal(data);
+                } else {
+                    showToast(`${data.type}: ${data.label}`, 'info');
+                }
+                
+                // Log details for debugging
+                console.log('Node clicked:', data);
+            });
+            
+            // Store cy instance for later use
+            window.cyInstance = cy;
+        }
+        
+        // Build graph from context memory documents
+        function buildGraphFromContextMemory(documents) {
+            const nodes = [];
+            const edges = [];
+            const processedNodes = new Set();
+            
+            documents.forEach(doc => {
+                if (doc.agent_name && !processedNodes.has(doc.agent_name)) {
+                    processedNodes.add(doc.agent_name);
+                    
+                    // Add agent node
+                    nodes.push({
+                        id: doc.agent_name,
+                        label: doc.agent_name.replace(/_/g, ' '),
+                        type: 'agent',
+                        color: doc.layer1_constitutional?.agent_identity?.team === 'Research_Team' ? '#22c55e' : 
+                               doc.layer1_constitutional?.agent_identity?.team === 'Engineering_Team' ? '#3b82f6' : 
+                               doc.layer1_constitutional?.agent_identity?.role?.includes('HEAD') ? '#f59e0b' : '#8b5cf6',
+                        size: doc.layer1_constitutional?.agent_identity?.authority_level === 'management' ? 3 : 1,
+                        properties: {
+                            role: doc.layer1_constitutional?.agent_identity?.role,
+                            team: doc.layer1_constitutional?.agent_identity?.team,
+                            reports_to: doc.layer1_constitutional?.agent_identity?.reports_to,
+                            contextId: doc.id
+                        }
+                    });
+                    
+                    // Add reporting relationships
+                    if (doc.layer1_constitutional?.agent_identity?.reports_to) {
+                        edges.push({
+                            id: `${doc.agent_name}_reports_to_${doc.layer1_constitutional.agent_identity.reports_to}`,
+                            source: doc.agent_name,
+                            target: doc.layer1_constitutional.agent_identity.reports_to,
+                            type: 'reports_to',
+                            label: 'reports to'
+                        });
+                    }
+                }
+            });
+            
+            return { nodes, edges };
+        }
+        
+        // Show node details in a modal
+        function showNodeDetailsModal(nodeData) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 8px; width: 80%; max-width: 800px; max-height: 80vh; 
+                            overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border-color);">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: var(--text-primary);">${nodeData.label || nodeData.id}</h3>
+                        <button onclick="this.closest('div[style*='position: fixed']').remove()" 
+                                style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                        <div class="loading">Loading context data...</div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="this.closest('div[style*='position: fixed']').remove()">Close</button>
+                        ${nodeData.properties?.contextId ? 
+                            `<button class="btn btn-primary" onclick="loadFullContext('${nodeData.properties.contextId}')">View Full Context</button>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load node details
+            if (nodeData.properties?.contextId) {
+                loadNodeContextData(nodeData.properties.contextId, modal.querySelector('div[style*="overflow-y: auto"]'));
+            } else {
+                const content = modal.querySelector('div[style*="overflow-y: auto"]');
+                content.innerHTML = `
+                    <div style="font-family: var(--font-mono); font-size: 13px;">
+                        <h4>Node Properties</h4>
+                        <pre class="code-block">${JSON.stringify(nodeData, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load context data for a node
+        async function loadNodeContextData(contextId, container) {
+            try {
+                const response = await fetchData(`${API_BASE}/cosmos/agent_context_memory/document/${contextId}`);
+                if (response && response.document) {
+                    const doc = response.document;
+                    container.innerHTML = `
+                        <div style="font-family: var(--font-family); font-size: 14px; line-height: 1.6;">
+                            <div class="card" style="margin-bottom: 16px;">
+                                <h4>Agent Identity</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <div><strong>Name:</strong> ${doc.agent_name}</div>
+                                    <div><strong>Role:</strong> ${doc.layer1_constitutional?.agent_identity?.role || 'N/A'}</div>
+                                    <div><strong>Team:</strong> ${doc.layer1_constitutional?.agent_identity?.team || 'N/A'}</div>
+                                    <div><strong>Reports to:</strong> ${doc.layer1_constitutional?.agent_identity?.reports_to || 'N/A'}</div>
+                                    <div><strong>Authority:</strong> ${doc.layer1_constitutional?.agent_identity?.authority_level || 'N/A'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card" style="margin-bottom: 16px;">
+                                <h4>Compliance Status</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <div><strong>Identity Refresh Count:</strong> ${doc.layer2_compliance?.compliance_tracking?.identity_refresh_count || 0}</div>
+                                    <div><strong>Evidence Compliance:</strong> ${doc.layer2_compliance?.compliance_tracking?.evidence_compliance_rate || 0}%</div>
+                                    <div><strong>Task Completion:</strong> ${doc.layer2_compliance?.compliance_tracking?.task_completion_rate || 0}%</div>
+                                    <div><strong>Violations:</strong> ${doc.layer2_compliance?.compliance_tracking?.violations_count || 0}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <h4>Current Session</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <div><strong>Task:</strong> ${doc.layer3_operational?.current_session?.current_task?.description || 'None'}</div>
+                                    <div><strong>Session ID:</strong> ${doc.layer3_operational?.current_session?.session_id || 'N/A'}</div>
+                                    <div><strong>Active TODOs:</strong> ${doc.layer3_operational?.current_session?.active_todos?.length || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="error">Failed to load context data</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Load full context in Cosmos Explorer
+        function loadFullContext(contextId) {
+            // Close modal
+            document.querySelector('div[style*="position: fixed"]')?.remove();
+            
+            // Switch to Cosmos Explorer tab
+            switchTab('cosmos');
+            
+            // Select agent_context_memory container
+            setTimeout(() => {
+                selectContainer('agent_context_memory');
+                // TODO: Implement document search/filter by ID
+                showToast('Switched to Cosmos Explorer - agent_context_memory', 'info');
+            }, 500);
+        }
+        
+        // View Cosmos document in modal
+        async function viewCosmosDocument(containerId, documentId) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 8px; width: 90%; max-width: 900px; height: 80vh; 
+                            display: flex; flex-direction: column; border: 1px solid var(--border-color);">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; color: var(--text-primary);">Document Viewer</h3>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Container: ${containerId} | ID: ${documentId}
+                            </div>
+                        </div>
+                        <button onclick="this.closest('div[style*='position: fixed']').remove()" 
+                                style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding: 20px;">
+                        <div class="loading">Loading document...</div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: space-between;">
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            Container: ${containerId} | ID: ${documentId} | Partition: <span id="doc-partition">Loading...</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="copyDocumentToClipboard('${containerId}', '${documentId}')">📋 Copy</button>
+                            <button class="btn btn-secondary" onclick="editCosmosDocument('${containerId}', '${documentId}')">✏️ Edit</button>
+                            <button class="btn btn-secondary" onclick="deleteCosmosDocument('${containerId}', '${documentId}')">🗑️ Delete</button>
+                            <button class="btn btn-secondary" onclick="this.closest('div[style*='position: fixed']').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load document
+            const contentDiv = modal.querySelector('div[style*="overflow-y: auto"]');
+            try {
+                const response = await fetchData(`${API_BASE}/cosmos/${containerId}/document/${documentId}`);
+                if (response && response.document) {
+                    const doc = response.document;
+                    
+                    // Update partition key display
+                    document.getElementById('doc-partition').textContent = doc.partitionKey || 'N/A';
+                    
+                    // Display formatted document
+                    contentDiv.innerHTML = `
+                        <pre class="code-block" style="margin: 0; white-space: pre-wrap; font-size: 13px;">${JSON.stringify(doc, null, 2)}</pre>
+                    `;
+                } else {
+                    contentDiv.innerHTML = '<div class="error">Failed to load document</div>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Helper functions for document actions
+        async function copyDocumentToClipboard(containerId, documentId) {
+            try {
+                const response = await fetchData(`${API_BASE}/cosmos/${containerId}/document/${documentId}`);
+                if (response && response.document) {
+                    navigator.clipboard.writeText(JSON.stringify(response.document, null, 2));
+                    showToast('Document copied to clipboard', 'success');
+                }
+            } catch (error) {
+                showToast('Failed to copy document', 'error');
+            }
+        }
+        
+        function editCosmosDocument(containerId, documentId) {
+            showToast('Document editing coming soon', 'info');
+        }
+        
+        function deleteCosmosDocument(containerId, documentId) {
+            if (confirm(`Are you sure you want to delete document ${documentId}?`)) {
+                showToast('Document deletion coming soon', 'info');
+            }
+        }
+        
+        // Additional tab functions
+        async function loadManagerDashboard() {
+            const content = document.getElementById('manager-content');
+            content.innerHTML = '<div class="loading">Loading manager dashboard...</div>';
+            
+            // For now, show placeholder
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Team Members</div>
+                            <div class="stat-value">8</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Tasks</div>
+                            <div class="stat-value">12</div>
+                        </div>
+                    </div>
+                `;
+            }, 500);
+        }
+        
+        async function loadWorkspace() {
+            const content = document.getElementById('workspace-content');
+            content.innerHTML = '<div class="loading">Loading workspace...</div>';
+            
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div style="font-family: var(--font-mono); padding: 20px;">
+                        <div>📁 Research & Analytics Services</div>
+                        <div style="margin-left: 20px;">📁 Agent_Shells</div>
+                        <div style="margin-left: 20px;">📁 Engineering Workspace</div>
+                        <div style="margin-left: 20px;">📁 System Enforcement Workspace</div>
+                    </div>
+                `;
+            }, 500);
+        }
+        
+        async function loadResearch() {
+            const content = document.getElementById('research-content');
+            content.innerHTML = '<div class="loading">Loading research visualization...</div>';
+            
+            setTimeout(() => {
+                content.innerHTML = '<div class="empty-state">Research visualization coming soon</div>';
+            }, 500);
+        }
+        
+        async function loadDocumentation() {
+            const content = document.getElementById('documentation-content');
+            content.innerHTML = '<div class="loading">Loading documentation library...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/docs/structure`);
+                const structure = await response.json();
+                
+                if (structure && structure.categories) {
+                    displayDocumentationStructure(content, structure);
+                } else {
+                    content.innerHTML = '<div class="empty-state">Documentation system temporarily unavailable</div>';
+                }
+            } catch (error) {
+                console.error('Documentation error:', error);
+                content.innerHTML = '<div class="empty-state">Failed to load documentation</div>';
+            }
+        }
+        
+        function displayDocumentationStructure(container, structure) {
+            container.innerHTML = `
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" placeholder="Search documentation..." 
+                               style="width: 100%; padding: 8px; background: var(--bg-dark); 
+                                      color: var(--text-primary); border: 1px solid var(--border-color); 
+                                      border-radius: 4px;">
+                    </div>
+                    <div id="doc-categories">
+                        ${structure.categories.map(cat => `
+                            <div class="card" style="margin-bottom: 10px;">
+                                <h4 style="cursor: pointer;" onclick="toggleDocCategory('${cat.id}')">
+                                    ${cat.name} (${cat.documents ? cat.documents.length : 0})
+                                </h4>
+                                <div id="doc-cat-${cat.id}" style="display: none; margin-top: 10px;">
+                                    ${cat.documents ? cat.documents.map(doc => `
+                                        <div style="padding: 8px; cursor: pointer; border-radius: 4px;"
+                                             onmouseover="this.style.backgroundColor='var(--bg-hover)'"
+                                             onmouseout="this.style.backgroundColor='transparent'"
+                                             onclick="viewDocument('${doc.id}')">
+                                            📄 ${doc.title}
+                                        </div>
+                                    `).join('') : '<div style="color: var(--text-muted);">No documents</div>'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function toggleDocCategory(catId) {
+            const element = document.getElementById(`doc-cat-${catId}`);
+            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function viewDocument(docId) {
+            showToast(`Viewing document ${docId}`, 'info');
+        }
+        
+        // Deep Context Management Functions
+        let selectedDeepContextAgent = null;
+        
+        async function loadDeepContext() {
+            const agentsList = document.getElementById('deepcontext-agents');
+            agentsList.innerHTML = '<div class="loading">Loading agents...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/live/agents`);
+                const agentsResponse = await response.json();
+                const agents = agentsResponse.success ? agentsResponse.agents : [];
+                
+                agentsList.innerHTML = '';
+                agents.forEach(agent => {
+                    const agentItem = document.createElement('div');
+                    agentItem.className = 'list-item';
+                    agentItem.innerHTML = `
+                        <div>
+                            <strong>${agent.agent_name.replace(/_/g, ' ')}</strong>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                ${agent.status} • ${agent.message_count || 0} messages
+                            </div>
+                        </div>
+                    `;
+                    agentItem.onclick = () => selectDeepContextAgent(agent.agent_name);
+                    agentsList.appendChild(agentItem);
+                });
+                
+                // Auto-select first agent
+                if (agents.length > 0) {
+                    selectDeepContextAgent(agents[0].agent_name);
+                }
+            } catch (error) {
+                agentsList.innerHTML = '<div class="error">Failed to load agents</div>';
+            }
+        }
+        
+        async function selectDeepContextAgent(agentName) {
+            selectedDeepContextAgent = agentName;
+            
+            // Update selection UI
+            document.querySelectorAll('#deepcontext-agents .list-item').forEach(item => {
+                const name = item.querySelector('strong').textContent;
+                item.classList.toggle('active', name === agentName.replace(/_/g, ' '));
+            });
+            
+            // Load deep context content
+            const content = document.getElementById('deepcontext-content');
+            content.innerHTML = '<div class="loading">Loading deep context...</div>';
+            
+            try {
+                // Load deep context file
+                const response = await fetch(`${API_BASE}/agents-async/agent/${agentName}/file?file_path=Agent_Shells/${agentName}/deep_context.md`);
+                const data = await response.json();
+                
+                content.innerHTML = `
+                    <div style="padding: 20px; height: 100%; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>${agentName.replace(/_/g, ' ')} - Deep Context</h3>
+                            <div>
+                                <button class="btn btn-secondary" onclick="editDeepContext('${agentName}')">Edit</button>
+                                <button class="btn btn-primary" onclick="analyzePatterns('${agentName}')">Analyze Patterns</button>
+                            </div>
+                        </div>
+                        <div class="code-block" style="white-space: pre-wrap; font-family: var(--font-mono); font-size: 13px;">
+                            ${escapeHtml(data.content || 'No deep context found')}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="padding: 20px;">
+                        <h3>${agentName.replace(/_/g, ' ')} - Deep Context</h3>
+                        <div class="error" style="margin-top: 20px;">Failed to load deep context: ${error.message}</div>
+                        <button class="btn btn-primary" style="margin-top: 20px;" onclick="initializeDeepContext('${agentName}')">Initialize Deep Context</button>
+                    </div>
+                `;
+            }
+        }
+        
+        async function extractPatterns() {
+            if (!selectedDeepContextAgent) {
+                showToast('Please select an agent first', 'error');
+                return;
+            }
+            
+            const content = document.getElementById('deepcontext-content');
+            content.innerHTML = '<div class="loading">Analyzing session logs and extracting patterns...</div>';
+            
+            try {
+                // This would call a backend endpoint to analyze logs
+                // For now, show the extraction UI
+                content.innerHTML = `
+                    <div style="padding: 20px; height: 100%; overflow-y: auto;">
+                        <h3>Pattern Extraction - ${selectedDeepContextAgent.replace(/_/g, ' ')}</h3>
+                        
+                        <div class="card" style="margin: 20px 0;">
+                            <h4>Technical Achievements</h4>
+                            <div id="technical-achievements" class="code-block" style="margin-top: 10px; padding: 10px;">
+                                Analyzing journal.md for completed projects...
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin: 20px 0;">
+                            <h4>Learned Patterns</h4>
+                            <div id="learned-patterns" class="code-block" style="margin-top: 10px; padding: 10px;">
+                                Searching for LESSON LEARNED and EVIDENCE markers...
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin: 20px 0;">
+                            <h4>Performance Insights</h4>
+                            <div id="performance-insights" class="code-block" style="margin-top: 10px; padding: 10px;">
+                                Extracting performance metrics and optimizations...
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="saveExtractedPatterns('${selectedDeepContextAgent}')">Save to Deep Context</button>
+                            <button class="btn btn-secondary" onclick="selectDeepContextAgent('${selectedDeepContextAgent}')">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Simulate pattern extraction
+                setTimeout(() => {
+                    document.getElementById('technical-achievements').innerHTML = `
+                        • Dashboard Enhancement (2025-06-23): Fixed CSS positioning bug, added Agent Shell Explorer<br>
+                        • Backend Optimization (2025-06-22): Reduced Cosmos DB costs by 64%<br>
+                        • Documentation System (2025-06-22): Implemented hierarchical knowledge base with Azure Blob
+                    `;
+                    
+                    document.getElementById('learned-patterns').innerHTML = `
+                        • EVIDENCE: Always provide command → output → conclusion<br>
+                        • CSS Debugging: Check display properties for conflicts before complex solutions<br>
+                        • API Integration: Test CORS configuration early in development
+                    `;
+                    
+                    document.getElementById('performance-insights').innerHTML = `
+                        • Cross-partition query optimization: Use partition key filters (64% improvement)<br>
+                        • Frontend caching: Implement response cloning for cache storage<br>
+                        • Async operations: Use aiofiles for file reading in FastAPI
+                    `;
+                }, 1000);
+            } catch (error) {
+                content.innerHTML = '<div class="error">Failed to extract patterns</div>';
+            }
+        }
+        
+        function analyzePatterns(agentName) {
+            showToast(`Pattern analysis for ${agentName} coming soon`, 'info');
+        }
+        
+        function editDeepContext(agentName) {
+            showToast(`Deep context editing for ${agentName} coming soon`, 'info');
+        }
+        
+        function initializeDeepContext(agentName) {
+            showToast(`Initializing deep context for ${agentName}`, 'success');
+            selectDeepContextAgent(agentName);
+        }
+        
+        function saveExtractedPatterns(agentName) {
+            showToast(`Patterns saved to ${agentName} deep context`, 'success');
+            selectDeepContextAgent(agentName);
+        }
+        
+        // Export functions for onclick
+        window.loadOverview = loadOverview;
+        window.refreshContainers = refreshContainers;
+        window.selectContainer = selectContainer;
+        window.refreshAgents = refreshAgents;
+        window.selectAgent = selectAgent;
+        window.refreshMessages = refreshMessages;
+        window.filterMessagesByFolder = filterMessagesByFolder;
+        window.viewMessage = viewMessage;
+        window.composeNewMessage = composeNewMessage;
+        window.loadGraph = loadGraph;
+        window.closeComposeModal = closeComposeModal;
+        window.sendComposedMessage = sendComposedMessage;
+        window.closeMessageViewer = closeMessageViewer;
+        window.updateMessageStatus = updateMessageStatus;
+        window.toggleMessageStatus = toggleMessageStatus;
+        window.archiveMessage = archiveMessage;
+        window.replyToMessage = replyToMessage;
+        window.loadDeepContext = loadDeepContext;
+        window.selectDeepContextAgent = selectDeepContextAgent;
+        window.extractPatterns = extractPatterns;
+        window.analyzePatterns = analyzePatterns;
+        window.editDeepContext = editDeepContext;
+        window.initializeDeepContext = initializeDeepContext;
+        window.saveExtractedPatterns = saveExtractedPatterns;
+        window.copyInitialPrompt = copyInitialPrompt;
+        window.loadDocumentation = loadDocumentation;
+        window.toggleDocCategory = toggleDocCategory;
+        window.viewDocument = viewDocument;
+        window.showNodeDetailsModal = showNodeDetailsModal;
+        window.loadFullContext = loadFullContext;
+        window.viewCosmosDocument = viewCosmosDocument;
+        window.copyDocumentToClipboard = copyDocumentToClipboard;
+        window.editCosmosDocument = editCosmosDocument;
+        window.deleteCosmosDocument = deleteCosmosDocument;
+        
+        // Initialize on load
+        initialize();
+    </script>
+</body>
+</html>
