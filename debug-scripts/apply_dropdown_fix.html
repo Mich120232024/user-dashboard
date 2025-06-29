@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dropdown Fix Injector</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #0078d4;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        .secondary {
+            background: #6c757d;
+        }
+        .secondary:hover {
+            background: #5a6268;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background: #1e1e1e;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            border-left: 4px solid #28a745;
+        }
+        .info {
+            border-left: 4px solid #17a2b8;
+        }
+        .warning {
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Dropdown Cursor Fix Tool</h1>
+        <p>This tool will fix the cursor sticking issue across ALL dropdowns in your application.</p>
+        
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click "Copy Fix Script" below</li>
+            <li>Go to your FRED Dashboard tab</li>
+            <li>Open Developer Console (F12 or Cmd+Option+I)</li>
+            <li>Paste the script and press Enter</li>
+            <li>All dropdowns should now work correctly!</li>
+        </ol>
+        
+        <button onclick="copyFixScript()">📋 Copy Fix Script</button>
+        <button onclick="showQuickFix()" class="secondary">⚡ Show Quick Fix</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // The fix script content
+        const fixScript = `// COMPREHENSIVE DROPDOWN FIX FOR ENTIRE APPLICATION
+// This fixes cursor sticking issues across ALL dropdowns/selectors
+
+console.log("🔧 APPLYING GLOBAL DROPDOWN FIX");
+
+// 1. IMMEDIATE CSS FIX - Inject styles to prevent cursor issues
+const globalDropdownFix = document.createElement('style');
+globalDropdownFix.id = 'global-dropdown-fix';
+globalDropdownFix.textContent = \`
+/* ===== GLOBAL DROPDOWN CURSOR FIX ===== */
+
+/* Fix all select elements */
+select, 
+.dropdown,
+.dropdown-select,
+.custom-select,
+[role="combobox"],
+[role="listbox"],
+.MuiSelect-root,
+.ant-select,
+.select2-container,
+.react-select__control {
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    position: relative !important;
+}
+
+/* Prevent drag behavior */
+select:active,
+.dropdown:active,
+[role="combobox"]:active {
+    cursor: pointer !important;
+    user-drag: none !important;
+    -webkit-user-drag: none !important;
+}
+
+/* Fix option hover states */
+option,
+.dropdown-item,
+.dropdown-option,
+[role="option"],
+.MuiMenuItem-root,
+.ant-select-item,
+.react-select__option {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+/* Prevent parent containers from interfering */
+.dropdown-wrapper,
+.select-wrapper,
+.form-group,
+.input-group,
+.field-wrapper {
+    pointer-events: none !important;
+}
+
+/* Re-enable pointer events only on the actual dropdown */
+.dropdown-wrapper select,
+.select-wrapper select,
+.form-group select,
+.input-group select,
+.field-wrapper select,
+.dropdown-wrapper .dropdown,
+.select-wrapper .dropdown {
+    pointer-events: auto !important;
+}
+
+/* Fix for custom dropdown implementations */
+.dropdown-toggle {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.dropdown-menu {
+    cursor: default !important;
+}
+
+.dropdown-menu a,
+.dropdown-menu button,
+.dropdown-menu li {
+    cursor: pointer !important;
+}
+
+/* Prevent text selection during dropdown interaction */
+body.dropdown-open {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+/* Fix z-index stacking issues */
+.dropdown-menu,
+.dropdown-content,
+[role="listbox"] {
+    z-index: 9999 !important;
+}
+
+/* Ensure dropdowns don't cause layout shifts */
+select:focus,
+.dropdown:focus,
+[role="combobox"]:focus {
+    outline: 2px solid #0078d4 !important;
+    outline-offset: 2px !important;
+}
+
+/* Fix for React Select and similar libraries */
+.react-select__control--is-focused,
+.react-select__control:hover {
+    cursor: pointer !important;
+}
+
+.react-select__value-container {
+    cursor: pointer !important;
+}
+
+.react-select__indicators {
+    cursor: pointer !important;
+}
+\`;
+
+// Remove any existing fix and apply new one
+const existingFix = document.getElementById('global-dropdown-fix');
+if (existingFix) existingFix.remove();
+document.head.appendChild(globalDropdownFix);
+
+console.log("✅ Global CSS fix applied");
+
+// 2. FIX EVENT HANDLING - Prevent event bubbling issues
+function fixDropdownEvents() {
+    // Find all dropdowns
+    const allDropdowns = document.querySelectorAll(\`
+        select, 
+        .dropdown, 
+        [role="combobox"], 
+        [role="listbox"],
+        .custom-select,
+        .dropdown-toggle
+    \`);
+    
+    console.log(\`📊 Found \${allDropdowns.length} dropdown elements to fix\`);
+    
+    allDropdowns.forEach((dropdown, index) => {
+        // Remove any existing problematic listeners
+        const newDropdown = dropdown.cloneNode(true);
+        dropdown.parentNode.replaceChild(newDropdown, dropdown);
+        
+        // Add fixed event handlers
+        newDropdown.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+        });
+        
+        newDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Prevent drag behavior
+        newDropdown.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Fix focus behavior
+        newDropdown.addEventListener('focus', function() {
+            document.body.classList.add('dropdown-open');
+        });
+        
+        newDropdown.addEventListener('blur', function() {
+            document.body.classList.remove('dropdown-open');
+        });
+        
+        console.log(\`✅ Fixed dropdown \${index + 1}:\`, newDropdown.tagName, newDropdown.className);
+    });
+}
+
+// Apply fixes
+fixDropdownEvents();
+
+// Monitor for new dropdowns
+const dropdownObserver = new MutationObserver(function(mutations) {
+    let hasNewDropdowns = false;
+    
+    mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) {
+                if (node.matches && node.matches('select, .dropdown, [role="combobox"]')) {
+                    hasNewDropdowns = true;
+                } else if (node.querySelectorAll) {
+                    const innerDropdowns = node.querySelectorAll('select, .dropdown, [role="combobox"]');
+                    if (innerDropdowns.length > 0) {
+                        hasNewDropdowns = true;
+                    }
+                }
+            }
+        });
+    });
+    
+    if (hasNewDropdowns) {
+        console.log("🔄 New dropdowns detected, applying fixes...");
+        setTimeout(fixDropdownEvents, 100);
+    }
+});
+
+dropdownObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+// Final check
+setTimeout(() => {
+    const totalFixed = document.querySelectorAll('select, .dropdown, [role="combobox"]').length;
+    console.log(\`✅ GLOBAL DROPDOWN FIX COMPLETE - \${totalFixed} dropdowns protected\`);
+}, 1000);`;
+
+        function copyFixScript() {
+            navigator.clipboard.writeText(fixScript).then(() => {
+                showStatus('✅ Fix script copied to clipboard!\n\nNow paste it in your browser console.', 'success');
+            }).catch(err => {
+                showStatus('❌ Failed to copy. Please select and copy the script manually.', 'warning');
+                console.error('Copy failed:', err);
+            });
+        }
+        
+        function showQuickFix() {
+            const quickFix = `// QUICK FIX - Just the CSS
+document.head.insertAdjacentHTML('beforeend', '<style>select, .dropdown, [role="combobox"] { cursor: pointer !important; user-select: none !important; } .dropdown-wrapper { pointer-events: none !important; } .dropdown-wrapper select { pointer-events: auto !important; }</style>');
+console.log("✅ Quick dropdown fix applied!");`;
+            
+            navigator.clipboard.writeText(quickFix).then(() => {
+                showStatus('⚡ Quick fix copied!\n\nThis is a minimal CSS-only fix.', 'info');
+            });
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

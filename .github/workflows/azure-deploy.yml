@@ -1,0 +1,146 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: 'Deployment target'
+        required: true
+        default: 'container-apps'
+        type: choice
+        options:
+        - container-apps
+        - aks
+
+env:
+  AZURE_RESOURCE_GROUP: rg-user-dashboard
+  AZURE_LOCATION: eastus
+  ACR_NAME: acruserdashboard
+  COSMOS_ACCOUNT: cosmos-user-dashboard
+  REDIS_NAME: redis-user-dashboard
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Azure CLI Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Azure Container Registry
+      run: |
+        az acr login --name ${{ env.ACR_NAME }}
+    
+    - name: Get ACR login server
+      id: acr
+      run: |
+        ACR_LOGIN_SERVER=$(az acr show --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
+        echo "login_server=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          ${{ steps.acr.outputs.login_server }}/user-dashboard-backend:latest
+          ${{ steps.acr.outputs.login_server }}/user-dashboard-backend:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          ${{ steps.acr.outputs.login_server }}/user-dashboard-frontend:latest
+          ${{ steps.acr.outputs.login_server }}/user-dashboard-frontend:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Deploy to Azure Container Apps
+      if: github.event.inputs.deployment_target == 'container-apps' || github.event.inputs.deployment_target == ''
+      run: |
+        az deployment group create \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --template-file azure/container-apps-deploy.bicep \
+          --parameters \
+            cosmosAccountName=${{ env.COSMOS_ACCOUNT }} \
+            redisCacheName=${{ env.REDIS_NAME }} \
+            containerRegistry=${{ steps.acr.outputs.login_server }} \
+            imageTag=${{ github.sha }}
+    
+    - name: Deploy to AKS
+      if: github.event.inputs.deployment_target == 'aks'
+      run: |
+        # Get AKS credentials
+        az aks get-credentials \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name aks-user-dashboard \
+          --overwrite-existing
+        
+        # Create namespace
+        kubectl create namespace user-dashboard --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Update secrets
+        COSMOS_KEY=$(az cosmosdb keys list --name ${{ env.COSMOS_ACCOUNT }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query primaryMasterKey -o tsv)
+        REDIS_KEY=$(az redis list-keys --name ${{ env.REDIS_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query primaryKey -o tsv)
+        
+        kubectl create secret generic cosmos-secret \
+          --namespace user-dashboard \
+          --from-literal=endpoint=https://${{ env.COSMOS_ACCOUNT }}.documents.azure.com:443/ \
+          --from-literal=key=$COSMOS_KEY \
+          --dry-run=client -o yaml | kubectl apply -f -
+        
+        kubectl create secret generic redis-secret \
+          --namespace user-dashboard \
+          --from-literal=connection-string="${{ env.REDIS_NAME }}.redis.cache.windows.net:6380,password=$REDIS_KEY,ssl=True,abortConnect=False" \
+          --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Deploy
+        sed "s|#{ACR_REGISTRY}#|${{ steps.acr.outputs.login_server }}|g; s|#{BUILD_ID}#|${{ github.sha }}|g" azure/aks-deployment.yaml | kubectl apply -f -
+    
+    - name: Get deployment URLs
+      id: urls
+      run: |
+        if [[ "${{ github.event.inputs.deployment_target }}" == "aks" ]]; then
+          INGRESS_IP=$(kubectl get ingress user-dashboard-ingress -n user-dashboard -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "frontend_url=http://$INGRESS_IP" >> $GITHUB_OUTPUT
+          echo "backend_url=http://$INGRESS_IP/api" >> $GITHUB_OUTPUT
+        else
+          BACKEND_URL=$(az deployment group show \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name container-apps-deploy \
+            --query properties.outputs.backendUrl.value -o tsv)
+          FRONTEND_URL=$(az deployment group show \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name container-apps-deploy \
+            --query properties.outputs.frontendUrl.value -o tsv)
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Update deployment summary
+      run: |
+        echo "## 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Frontend URL:** ${{ steps.urls.outputs.frontend_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Backend URL:** ${{ steps.urls.outputs.backend_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "**API Docs:** ${{ steps.urls.outputs.backend_url }}/docs" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Image Tags:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Backend: ${{ steps.acr.outputs.login_server }}/user-dashboard-backend:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Frontend: ${{ steps.acr.outputs.login_server }}/user-dashboard-frontend:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
